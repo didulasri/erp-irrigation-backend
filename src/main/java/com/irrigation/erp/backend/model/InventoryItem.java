@@ -53,6 +53,10 @@ public class InventoryItem {
     @Column(name = "unit_price",nullable = false,precision = 10,scale = 2)
     private BigDecimal unitPrice;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "created_by_user_id", nullable = false, updatable = false)
+    private User creatingUser;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_updated_by_user_id")
     private User lastUpdatedByUser;
@@ -77,4 +81,6 @@ public class InventoryItem {
 
         }
     }
+
+
 }
