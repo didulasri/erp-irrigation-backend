@@ -1,5 +1,7 @@
 package com.irrigation.erp.backend.service;
 
+import com.irrigation.erp.backend.dto.InventoryItemCreateRequestDTO;
+import com.irrigation.erp.backend.enums.StockStatus;
 import com.irrigation.erp.backend.model.InventoryItem;
 import com.irrigation.erp.backend.model.ItemCategory;
 import com.irrigation.erp.backend.model.ItemType;
@@ -9,11 +11,14 @@ import com.irrigation.erp.backend.repository.ItemCategoryRepository;
 import com.irrigation.erp.backend.repository.ItemTypeRepository;
 import com.irrigation.erp.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.hibernate.boot.model.naming.IllegalIdentifierException;
+// import org.hibernate.boot.model.naming.IllegalIdentifierException; // REMOVED THIS IMPORT
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
@@ -33,35 +38,34 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryItem createInventoryItem(String itemCode, String itemName, String itemDescription, String unitOfMeasurement, Double currentStockQuantity,
-                                             Double minimumStockLevel, String locationInStore, BigDecimal unitPrice, String itemCategoryName,String itemTypeName, Long creatingUserId ){
+    public InventoryItem createInventoryItem(InventoryItemCreateRequestDTO requestDTO) { // Takes DTO directly
 
         //check for unique item code
-        if(inventoryItemRepository.findByItemCode(itemCode).isPresent()){
-            throw new IllegalArgumentException("Item with code '" + itemCode + "' already exists.");
+        if(inventoryItemRepository.findByItemCode(requestDTO.getItemCode()).isPresent()){
+            throw new IllegalArgumentException("Item with code '" + requestDTO.getItemCode() + "' already exists.");
         }
 
-      //fetch entities from repositories
-        ItemCategory itemCategory = itemCategoryRepository.findByName(itemCategoryName)
-                .orElseThrow(()-> new IllegalArgumentException("Item Category '" + itemCategoryName + "' not found."));
+        //fetch entities from repositories
+        ItemCategory itemCategory = itemCategoryRepository.findByName(requestDTO.getItemCategoryName())
+                .orElseThrow(()-> new IllegalArgumentException("Item Category '" + requestDTO.getItemCategoryName() + "' not found."));
 
-        ItemType itemType = itemTypeRepository.findByName(itemTypeName)
-                .orElseThrow(()-> new IllegalArgumentException("Item Type '" + itemTypeName + "' not found."));
+        ItemType itemType = itemTypeRepository.findByName(requestDTO.getItemTypeName())
+                .orElseThrow(()-> new IllegalArgumentException("Item Type '" + requestDTO.getItemTypeName() + "' not found."));
 
-        User creatingUser = userRepository.findById(creatingUserId)
-                .orElseThrow(()-> new IllegalIdentifierException("User with id '" + creatingUserId + "' not found."));
-
+        User creatingUser = userRepository.findById(requestDTO.getCreatingUserId())
+                .orElseThrow(()-> new IllegalArgumentException("User with id '" + requestDTO.getCreatingUserId() + "' not found."));
+        // Changed from IllegalIdentifierException for consistency
 
         //Create and Populate New InventoryItem Object
         InventoryItem newItem = new InventoryItem();
-        newItem.setItemCode(itemCode);
-        newItem.setItemName(itemName);
-        newItem.setItemDescription(itemDescription);
-        newItem.setUnitOfMeasurement(unitOfMeasurement);
-        newItem.setCurrentStockQuantity(currentStockQuantity);
-        newItem.setMinimumStockLevel(minimumStockLevel);
-        newItem.setLocationInStore(locationInStore);
-        newItem.setUnitPrice(unitPrice);
+        newItem.setItemCode(requestDTO.getItemCode());
+        newItem.setItemName(requestDTO.getItemName());
+        newItem.setItemDescription(requestDTO.getItemDescription());
+        newItem.setUnitOfMeasurement(requestDTO.getUnitOfMeasurement());
+        newItem.setCurrentStockQuantity(requestDTO.getCurrentStockQuantity());
+        newItem.setMinimumStockLevel(requestDTO.getMinimumStockLevel());
+        newItem.setLocationInStore(requestDTO.getLocationInStore());
+        newItem.setUnitPrice(requestDTO.getUnitPrice());
         newItem.setItemCategory(itemCategory);
         newItem.setItemType(itemType);
 
@@ -70,10 +74,8 @@ public class InventoryService {
         newItem.setLastUpdatedAt(LocalDateTime.now());
         newItem.setIsActive(true);
 
-
         //save to database
         return inventoryItemRepository.save(newItem);
-
     }
 
     // service for updateInventoryItem
@@ -97,34 +99,64 @@ public class InventoryService {
         if (locationInStore != null) item.setLocationInStore(locationInStore);
         if (unitPrice != null) item.setUnitPrice(unitPrice);
 
-        if (itemCategoryName != null && !item.getItemCategory().getName().equals(itemCategoryName)) {
+        if (itemCategoryName != null && item.getItemCategory() != null && !item.getItemCategory().getName().equals(itemCategoryName)) { // Added null check for getItemCategory()
             ItemCategory newCategory = itemCategoryRepository.findByName(itemCategoryName)
                     .orElseThrow(() -> new IllegalArgumentException("Item Category '" + itemCategoryName + "' not found."));
             item.setItemCategory(newCategory);
         }
-        if (itemTypeName != null && !item.getItemType().getName().equals(itemTypeName)) {
+        if (itemTypeName != null && item.getItemType() != null && !item.getItemType().getName().equals(itemTypeName)) { // Added null check for getItemType()
             ItemType newType = itemTypeRepository.findByName(itemTypeName)
                     .orElseThrow(() -> new IllegalArgumentException("Item Type '" + itemTypeName + "' not found."));
             item.setItemType(newType);
         }
 
-
         if(isActiveStatus != null) item.setIsActive(isActiveStatus);
-
 
         //update updatingUser fields
         User updatingUser = userRepository.findById(updatingUserId)
-                .orElseThrow(()-> new IllegalIdentifierException("User with id '" + updatingUserId + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException("User with id '" + updatingUserId + "' not found."));
+        // Changed from IllegalIdentifierException for consistency
         item.setLastUpdatedByUser(updatingUser);
         item.setLastUpdatedAt(LocalDateTime.now());
 
         return inventoryItemRepository.save(item);
-
-
     }
 
+    public Optional<InventoryItem> getInventoryItemById(Long id) {
+        return inventoryItemRepository.findById(id);
+    }
 
+    public Optional<InventoryItem> getInventoryItemByItemCode(String itemCode) {
+        return inventoryItemRepository.findByItemCode(itemCode);
+    }
 
+    public List<InventoryItem> getAllInventoryItems() {
+        return inventoryItemRepository.findAll();
+    }
 
+    public List<InventoryItem> getLowStockItems() {
+        return inventoryItemRepository.findAll().stream()
+                .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public InventoryItem adjustStock(Long itemId, Double quantityChange, Long adjustingUserId, String reason) {
+        InventoryItem item = inventoryItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + " not found."));
+
+        double newQuantity = item.getCurrentStockQuantity() + quantityChange;
+        if (newQuantity < 0 && item.getItemType() != null && item.getItemType().getName().equals("Material")) {
+            throw new IllegalArgumentException("Stock quantity cannot go below zero for " + item.getItemName() + " (Type: Material).");
+        }
+
+        item.setCurrentStockQuantity(newQuantity);
+
+        User adjustingUser = userRepository.findById(adjustingUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Adjusting User with ID " + adjustingUserId + " not found."));
+        item.setLastUpdatedByUser(adjustingUser);
+        item.setLastUpdatedAt(LocalDateTime.now());
+
+        return inventoryItemRepository.save(item);
+    }
 }
-

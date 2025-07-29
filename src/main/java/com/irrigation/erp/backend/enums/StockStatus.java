@@ -1,6 +1,8 @@
 package com.irrigation.erp.backend.enums;
 
 import lombok.Getter;
+import lombok.Setter;
+
 
 @Getter
 public enum StockStatus {

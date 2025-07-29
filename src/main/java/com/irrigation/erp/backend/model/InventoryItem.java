@@ -3,9 +3,9 @@ package com.irrigation.erp.backend.model;
 
 import com.irrigation.erp.backend.enums.StockStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import org.hibernate.annotations.SecondaryRow;
 import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
 
 import java.math.BigDecimal;
@@ -17,9 +17,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InventoryItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
 
     @Column(nullable = false, unique = true)
     private String itemCode;
@@ -33,9 +35,11 @@ public class InventoryItem {
     @Column(name = "unit_of_measurement" ,nullable = false)
     private String unitOfMeasurement;
 
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_category_id", nullable = false)
     private ItemCategory itemCategory;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_type_id",nullable = false)
@@ -52,6 +56,7 @@ public class InventoryItem {
 
     @Column(name = "unit_price",nullable = false,precision = 10,scale = 2)
     private BigDecimal unitPrice;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by_user_id", nullable = false, updatable = false)
