@@ -22,8 +22,8 @@ public class InventoryIssue {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_request_id", nullable = false)
-    private InventoryRequest request;
+    @JoinColumn(name = "inventory_request_line_item_id", nullable = false)
+    private InventoryRequestLineItem requestLineItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issued_item_id", nullable = false)
@@ -48,6 +48,9 @@ public class InventoryIssue {
 
     @Column(columnDefinition = "TEXT")
     private String purpose;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
 
 }

@@ -1,12 +1,10 @@
 package com.irrigation.erp.backend.controller;
 
 
-import com.irrigation.erp.backend.dto.InventoryRequestCreateDTO;
-import com.irrigation.erp.backend.dto.InventoryRequestResponseDTO;
-import com.irrigation.erp.backend.dto.IssueRequestDTO;
-import com.irrigation.erp.backend.dto.NoStockRequestDTO;
+import com.irrigation.erp.backend.dto.*;
 import com.irrigation.erp.backend.model.InventoryIssue;
 import com.irrigation.erp.backend.model.InventoryRequest;
+import com.irrigation.erp.backend.model.InventoryRequestLineItem;
 import com.irrigation.erp.backend.service.InventoryRequestService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/requests")
 public class InventoryRequestController {
@@ -27,29 +26,47 @@ public class InventoryRequestController {
         this.inventoryRequestService = inventoryRequestService;
     }
 
-    //convert to request Dto
+    // --- DTO Conversion Helper Methods ---
     private InventoryRequestResponseDTO convertToRequestDto(InventoryRequest request) {
         InventoryRequestResponseDTO dto = new InventoryRequestResponseDTO();
         dto.setId(request.getId());
-        dto.setRequestedQuantity(request.getRequestedQuantity());
         dto.setPurpose(request.getPurpose());
         dto.setStatus(request.getStatus());
         dto.setRequestedAt(request.getRequestedAt());
-
+        dto.setNotes(request.getNotes());
 
         if (request.getRequester() != null) {
             dto.setRequesterUserId(request.getRequester().getId());
             dto.setRequesterUsername(request.getRequester().getUsername());
         }
-        if (request.getRequestedItem() != null) {
-            dto.setRequestedItemId(request.getRequestedItem().getId());
-            dto.setRequestedItemCode(request.getRequestedItem().getItemCode());
-            dto.setRequestedItemName(request.getRequestedItem().getItemName());
-        }
         if (request.getProcessedBy() != null) {
             dto.setProcessedByUserId(request.getProcessedBy().getId());
             dto.setProcessedByUsername(request.getProcessedBy().getUsername());
             dto.setProcessedAt(request.getProcessedAt());
+        }
+
+        if (request.getLineItems() != null) {
+            dto.setItems(request.getLineItems().stream()
+                    .map(this::convertToLineItemDto)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setItems(List.of());
+        }
+
+        return dto;
+    }
+
+    private InventoryRequestLineItemResponseDTO convertToLineItemDto(InventoryRequestLineItem lineItem) {
+        InventoryRequestLineItemResponseDTO dto = new InventoryRequestLineItemResponseDTO();
+        dto.setId(lineItem.getId());
+        dto.setRequestedQuantity(lineItem.getRequestedQuantity());
+        dto.setStatus(lineItem.getStatus());
+
+        if (lineItem.getRequestedItem() != null) {
+            dto.setRequestedItemId(lineItem.getRequestedItem().getId());
+            dto.setRequestedItemCode(lineItem.getRequestedItem().getItemCode());
+            dto.setRequestedItemName(lineItem.getRequestedItem().getItemName());
+            dto.setCurrentStockQuantity(lineItem.getRequestedItem().getCurrentStockQuantity());
         }
         return dto;
     }
@@ -57,41 +74,39 @@ public class InventoryRequestController {
     // --- Inventory Request Endpoints ---
 
     @PostMapping("/create")
-    public ResponseEntity<InventoryRequestResponseDTO>createInventoryRequest (@Valid @RequestBody InventoryRequestCreateDTO requestDTO){
+    public ResponseEntity<InventoryRequestResponseDTO> createInventoryRequest(@Valid @RequestBody InventoryRequestCreateDTO requestDTO) {
         try {
             InventoryRequest newRequest = inventoryRequestService.createInventoryRequest(requestDTO);
             return new ResponseEntity<>(convertToRequestDto(newRequest), HttpStatus.CREATED);
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-
         }
     }
 
     @GetMapping("/pending")
     public ResponseEntity<List<InventoryRequestResponseDTO>> getPendingInventoryRequests() {
-        List<InventoryRequest> pendingRequests = inventoryRequestService.getAllPendingInventoryRequests();
+        List<InventoryRequest> pendingRequests = inventoryRequestService.getAllPendingInventoryRequestsWithLineItems();
         List<InventoryRequestResponseDTO> dtos = pendingRequests.stream()
                 .map(this::convertToRequestDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-
-    @PatchMapping("/{requestId}/issue")
-    public ResponseEntity<InventoryRequestResponseDTO> issueRequestedItem(@PathVariable Long requestId, @Valid @RequestBody IssueRequestDTO issueDTO) {
+    @PatchMapping("/line-items/{lineItemId}/issue")
+    public ResponseEntity<InventoryRequestResponseDTO> issueRequestedItem(@PathVariable("lineItemId") Long inventoryRequestLineItemId, @Valid @RequestBody IssueRequestDTO issueDTO) {
         try {
-            InventoryIssue issuedRecord = inventoryRequestService.issueInventoryItem(requestId, issueDTO);
-            return ResponseEntity.ok(convertToRequestDto(issuedRecord.getRequest()));
+            InventoryIssue issuedRecord = inventoryRequestService.issueInventoryItem(inventoryRequestLineItemId, issueDTO);
+            return ResponseEntity.ok(convertToRequestDto(issuedRecord.getRequestLineItem().getRequest()));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
-    @PatchMapping("/{requestId}/no-stock")
-    public ResponseEntity<InventoryRequestResponseDTO> markRequestNoStock(@PathVariable Long requestId, @Valid @RequestBody NoStockRequestDTO noStockDTO) {
+    @PatchMapping("/line-items/{lineItemId}/no-stock")
+    public ResponseEntity<InventoryRequestResponseDTO> markRequestLineItemNoStock(@PathVariable("lineItemId") Long inventoryRequestLineItemId, @Valid @RequestBody NoStockRequestDTO noStockDTO) {
         try {
-            InventoryRequest updatedRequest = inventoryRequestService.markRequestNoStock(requestId, noStockDTO);
-            return ResponseEntity.ok(convertToRequestDto(updatedRequest));
+            InventoryRequestLineItem updatedLineItem = inventoryRequestService.markRequestLineItemNoStock(inventoryRequestLineItemId, noStockDTO);
+            return ResponseEntity.ok(convertToRequestDto(updatedLineItem.getRequest()));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -105,6 +120,14 @@ public class InventoryRequestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory request with ID '" + requestId + "' not found."));
     }
 
-
+    @PostMapping("/issue-batch")
+    public ResponseEntity<InventoryRequestResponseDTO> issueBatchRequestedItems(@Valid @RequestBody BatchIssueRequestDTO batchIssueDTO) {
+        try {
+            InventoryRequest updatedRequest = inventoryRequestService.issueBatchItems(batchIssueDTO);
+            return ResponseEntity.ok(convertToRequestDto(updatedRequest));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
 
 }
