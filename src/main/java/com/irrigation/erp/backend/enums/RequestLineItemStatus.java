@@ -1,9 +1,9 @@
 package com.irrigation.erp.backend.enums;
 
-public enum RequestStatus {
+public enum RequestLineItemStatus {
     PENDING,
     ISSUED,
+    ISSUED_PARTIALLY,
     NO_STOCK,
-    REJECTED,
-    ISSUED_PARTIALLY, CANCELLED
+
 }

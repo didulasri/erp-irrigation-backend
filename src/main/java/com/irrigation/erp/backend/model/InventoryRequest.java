@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name="inventory_requests")
@@ -24,12 +26,8 @@ public class InventoryRequest {
     @JoinColumn(name = "requester_user_id", nullable = false)
     private User requester;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_item_id", nullable = false)
-    private  InventoryItem requestedItem;
-
-    @Column(nullable = false)
-    private Double requestedQuantity;
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InventoryRequestLineItem> lineItems = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String purpose;
@@ -47,6 +45,16 @@ public class InventoryRequest {
 
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    // Helper method to add a line item
+    public void addLineItem(InventoryRequestLineItem lineItem) {
+        lineItems.add(lineItem);
+        lineItem.setRequest(this);
+    }
+
 
 
 }
