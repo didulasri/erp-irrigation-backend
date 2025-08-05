@@ -15,9 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "http://localhost:5173")
+
 @RestController
 @RequestMapping("/api/requests")
+@CrossOrigin(origins = "http://localhost:5173")
 public class InventoryRequestController {
 
     private final InventoryRequestService inventoryRequestService;

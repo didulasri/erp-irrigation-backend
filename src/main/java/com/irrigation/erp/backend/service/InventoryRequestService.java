@@ -135,7 +135,7 @@ public class InventoryRequestService {
         }
         inventoryRequestLineItemRepository.save(requestLineItem);
 
-        updateOverallRequestStatus(requestLineItem.getRequest());
+        updateOverallRequestStatus(requestLineItem.getRequest(),storeKeeper);
 
         return issue;
     }
@@ -161,7 +161,6 @@ public class InventoryRequestService {
             throw new IllegalArgumentException("One or more line items not found.");
         }
 
-
         // Ensure all line items belong to the same parent request
         Set<Long> parentRequestIds = lineItems.stream()
                 .map(item -> item.getRequest().getId())
@@ -170,7 +169,7 @@ public class InventoryRequestService {
             throw new IllegalArgumentException("All items in a batch must belong to the same inventory request.");
         }
 
-        // Ensure all items are of the same type (e.g., Material, Stationary)
+
         Set<ItemType> itemTypes = lineItems.stream()
                 .map(item -> item.getRequestedItem().getItemType())
                 .collect(Collectors.toSet());
@@ -216,10 +215,15 @@ public class InventoryRequestService {
             issue.setIssuedToUser(parentRequest.getRequester());
             issue.setIssuedAt(LocalDateTime.now());
 
+
+            // Set the parent request reference on the issue object
+            issue.setInventoryRequest(parentRequest);
+
             BigDecimal unitPrice = inventoryItem.getUnitPrice();
             BigDecimal issuedQuantityBd = BigDecimal.valueOf(quantityToIssue);
             BigDecimal calculatedItemValue = unitPrice.multiply(issuedQuantityBd);
             issue.setItemValue(calculatedItemValue);
+
 
             issue.setPurpose(parentRequest.getPurpose());
             issue.setNotes(issueDTO.getIssueNotes());
@@ -235,11 +239,10 @@ public class InventoryRequestService {
         }
 
         // Update the overall request status once for the entire batch
-        updateOverallRequestStatus(parentRequest);
+        updateOverallRequestStatus(parentRequest,storeKeeper);
 
         return parentRequest;
     }
-
 
     @Transactional
     public InventoryRequestLineItem markRequestLineItemNoStock(Long inventoryRequestLineItemId, NoStockRequestDTO noStockDTO) {
@@ -256,24 +259,34 @@ public class InventoryRequestService {
         requestLineItem.setStatus(RequestLineItemStatus.NO_STOCK);
         inventoryRequestLineItemRepository.save(requestLineItem);
 
-        updateOverallRequestStatus(requestLineItem.getRequest());
+        updateOverallRequestStatus(requestLineItem.getRequest(),storeKeeper);
 
         return requestLineItem;
     }
 
-    private void updateOverallRequestStatus(InventoryRequest request) {
+    private void updateOverallRequestStatus(InventoryRequest request, User processedBy) {
         Set<RequestLineItemStatus> lineItemStatuses = request.getLineItems().stream()
                 .map(InventoryRequestLineItem::getStatus)
                 .collect(Collectors.toSet());
 
         if (lineItemStatuses.contains(RequestLineItemStatus.PENDING) || lineItemStatuses.contains(RequestLineItemStatus.ISSUED_PARTIALLY)) {
             request.setStatus(RequestStatus.ISSUED_PARTIALLY);
+            // FIX: Set the user and timestamp when the status is partially issued
+            request.setProcessedBy(processedBy);
+            request.setProcessedAt(LocalDateTime.now());
         } else if (lineItemStatuses.contains(RequestLineItemStatus.ISSUED) && lineItemStatuses.size() == 1) {
             request.setStatus(RequestStatus.ISSUED);
+            // FIX: Set the user and timestamp when the status is fully issued
+            request.setProcessedBy(processedBy);
+            request.setProcessedAt(LocalDateTime.now());
         } else {
             request.setStatus(RequestStatus.REJECTED);
+            // It's also good practice to set these fields for a rejected state
+            request.setProcessedBy(processedBy);
+            request.setProcessedAt(LocalDateTime.now());
         }
 
         inventoryRequestRepository.save(request);
     }
+
 }
