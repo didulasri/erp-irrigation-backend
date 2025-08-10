@@ -11,7 +11,8 @@ import com.irrigation.erp.backend.repository.ItemCategoryRepository;
 import com.irrigation.erp.backend.repository.ItemTypeRepository;
 import com.irrigation.erp.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
-// import org.hibernate.boot.model.naming.IllegalIdentifierException; // REMOVED THIS IMPORT
+
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -80,8 +81,8 @@ public class InventoryService {
 
     // service for updateInventoryItem
     @Transactional
-    public InventoryItem updateInventoryItem(String itemCode, String itemName, String itemDescription,String unitOfMeasurement,
-                                             Double minimumStockLevel,
+    public InventoryItem updateInventoryItem(String itemCode, String itemName, String itemDescription, String unitOfMeasurement,
+                                             BigDecimal minimumStockLevel,
                                              String locationInStore,
                                              BigDecimal unitPrice,
                                              String itemCategoryName,
@@ -141,12 +142,14 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryItem adjustStock(Long itemId, Double quantityChange, Long adjustingUserId, String reason) {
+    public InventoryItem adjustStock(Long itemId, @NotNull(message = "Quantity change cannot be null") BigDecimal quantityChange, Long adjustingUserId, String reason) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + " not found."));
 
-        double newQuantity = item.getCurrentStockQuantity() + quantityChange;
-        if (newQuantity < 0 && item.getItemType() != null && item.getItemType().getName().equals("Material")) {
+        BigDecimal newQuantity = item.getCurrentStockQuantity().add(quantityChange);
+
+
+        if (newQuantity.compareTo(BigDecimal.ZERO) < 0 && item.getItemType() != null && item.getItemType().getName().equals("Material")) {
             throw new IllegalArgumentException("Stock quantity cannot go below zero for " + item.getItemName() + " (Type: Material).");
         }
 

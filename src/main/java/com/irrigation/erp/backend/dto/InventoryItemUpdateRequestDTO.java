@@ -17,7 +17,7 @@ public class InventoryItemUpdateRequestDTO {
     private String unitOfMeasurement;
 
     @Min(value = 0, message = "Minimum stock level cannot be negative")
-    private Double minimumStockLevel;
+    private BigDecimal minimumStockLevel;
 
     private String locationInStore;
 

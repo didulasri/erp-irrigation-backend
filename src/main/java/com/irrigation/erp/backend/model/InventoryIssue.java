@@ -35,7 +35,7 @@ public class InventoryIssue {
     private InventoryItem issuedItem;
 
     @Column(nullable = false)
-    private Double issuedQuantity;
+    private BigDecimal issuedQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issued_by_user_id", nullable = false)

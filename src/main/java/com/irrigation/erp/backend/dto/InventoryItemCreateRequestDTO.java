@@ -26,11 +26,11 @@ public class InventoryItemCreateRequestDTO {
 
     @NotNull(message = "Current stock quantity cannot be null")
     @Min(value = 0, message = "Current stock quantity cannot be negative")
-    private Double currentStockQuantity;
+    private BigDecimal currentStockQuantity;
 
     @NotNull(message = "Minimum stock level cannot be null")
     @Min(value = 0, message = "Minimum stock level cannot be negative")
-    private Double minimumStockLevel;
+    private BigDecimal minimumStockLevel;
 
     @NotBlank(message = "Location in store cannot be empty")
     private String locationInStore;

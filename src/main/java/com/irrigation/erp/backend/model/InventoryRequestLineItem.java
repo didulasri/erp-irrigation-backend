@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "inventory_request_line_items")
 @Data
@@ -26,7 +28,7 @@ public class InventoryRequestLineItem {
     private InventoryItem requestedItem;
 
     @Column(nullable = false)
-    private Double requestedQuantity;
+    private BigDecimal requestedQuantity;
 
     //Status for specific line item
     @Enumerated(EnumType.STRING)
