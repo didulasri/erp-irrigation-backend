@@ -235,22 +235,25 @@ public class InventoryRequestService {
             return;
         }
 
-        // Check if any line item is still PENDING
-        boolean hasPendingItems = parentRequest.getLineItems().stream()
-                .anyMatch(lineItem -> lineItem.getStatus() == RequestLineItemStatus.PENDING);
+        // Check if any line item is still in a state that means the request is not fully completed.
+        // This includes PENDING, ISSUED_PARTIALLY, and NO_STOCK.
+        boolean hasUnprocessedItems = parentRequest.getLineItems().stream()
+                .anyMatch(lineItem -> lineItem.getStatus() == RequestLineItemStatus.PENDING ||
+                        lineItem.getStatus() == RequestLineItemStatus.NO_STOCK);
+//                        lineItem.getStatus() == RequestLineItemStatus.ISSUED_PARTIALLY);
 
-        // If there is any pending item, the overall status is PENDING
-        if (hasPendingItems) {
+        // If there is any unprocessed item, the overall status is PENDING
+        if (hasUnprocessedItems) {
             parentRequest.setStatus(RequestStatus.PENDING);
         } else {
-            // If there are no pending items, the overall status is ISSUED
+            // If there are no unprocessed items, it means all line items have been
+            // completely issued. The overall status can be set to ISSUED.
             parentRequest.setStatus(RequestStatus.ISSUED);
             parentRequest.setProcessedBy(processedByUser);
             parentRequest.setProcessedAt(LocalDateTime.now());
         }
 
         inventoryRequestRepository.save(parentRequest);
+
     }
-
-
 }
