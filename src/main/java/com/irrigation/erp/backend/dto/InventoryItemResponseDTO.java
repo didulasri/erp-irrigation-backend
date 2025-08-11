@@ -16,8 +16,8 @@ public class InventoryItemResponseDTO {
     private String itemName;
     private String itemDescription;
     private String unitOfMeasurement;
-    private Double currentStockQuantity;
-    private Double minimumStockLevel;
+    private BigDecimal currentStockQuantity;
+    private BigDecimal minimumStockLevel;
     private String locationInStore;
     private BigDecimal unitPrice;
 

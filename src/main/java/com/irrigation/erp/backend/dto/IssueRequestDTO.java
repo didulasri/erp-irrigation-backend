@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class IssueRequestDTO {
@@ -13,8 +15,8 @@ public class IssueRequestDTO {
     private Long issuedByUserId;
 
     @NotNull(message = "Issued quantity cannot be null")
-    @Min(value = 0, message = "Issued quantity must be positive")
-    private Double issuedQuantity;
+
+    private BigDecimal issuedQuantity;
 
     private String issueNotes;
 

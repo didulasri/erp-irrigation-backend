@@ -25,12 +25,17 @@ public class InventoryIssue {
     @JoinColumn(name = "inventory_request_line_item_id", nullable = false)
     private InventoryRequestLineItem requestLineItem;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_request_id", nullable = false)
+    private InventoryRequest inventoryRequest;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issued_item_id", nullable = false)
     private InventoryItem issuedItem;
 
     @Column(nullable = false)
-    private Double issuedQuantity;
+    private BigDecimal issuedQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issued_by_user_id", nullable = false)

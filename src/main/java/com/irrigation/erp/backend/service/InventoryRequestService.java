@@ -6,7 +6,7 @@ import com.irrigation.erp.backend.enums.RequestStatus;
 import com.irrigation.erp.backend.model.*;
 import com.irrigation.erp.backend.repository.*;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Past;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -56,7 +56,7 @@ public class InventoryRequestService {
             InventoryItem requestedItem = inventoryItemRepository.findByItemCode(lineItemDTO.getItemCode())
                     .orElseThrow(() -> new IllegalArgumentException("Requested item with code '" + lineItemDTO.getItemCode() + "' not found."));
 
-            if (lineItemDTO.getRequestedQuantity() <= 0) {
+            if (lineItemDTO.getRequestedQuantity().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("Requested quantity must be positive for item '" + lineItemDTO.getItemCode() + "'.");
             }
 
@@ -71,7 +71,7 @@ public class InventoryRequestService {
     }
 
     public List<InventoryRequest> getAllPendingInventoryRequestsWithLineItems() {
-        return inventoryRequestRepository.findByStatusWithLineItems(RequestStatus.PENDING);
+        return inventoryRequestRepository.findByStatus(RequestStatus.PENDING);
     }
 
     public Optional<InventoryRequest> getInventoryRequestById(Long requestId) {
@@ -91,21 +91,23 @@ public class InventoryRequestService {
                 .orElseThrow(() -> new IllegalArgumentException("Store keeper user with ID '" + issueDTO.getIssuedByUserId() + "' not found."));
 
         InventoryItem itemToIssue = requestLineItem.getRequestedItem();
-        Double requestedQuantity = requestLineItem.getRequestedQuantity();
-        Double quantityToIssue = issueDTO.getIssuedQuantity();
+        BigDecimal requestedQuantity = requestLineItem.getRequestedQuantity();
+        BigDecimal quantityToIssue = issueDTO.getIssuedQuantity();
 
-        Double alreadyIssuedQuantity = inventoryIssueRepository.sumIssuedQuantityByRequestLineItemId(requestLineItem.getId());
-        Double remainingQuantity = requestedQuantity - alreadyIssuedQuantity;
+        // FIX: The repository method must return a BigDecimal
+        BigDecimal alreadyIssuedQuantity = BigDecimal.valueOf(inventoryIssueRepository.sumIssuedQuantityByRequestLineItemId(requestLineItem.getId()));
+        BigDecimal remainingQuantity = requestedQuantity.subtract(alreadyIssuedQuantity);
 
-        if (quantityToIssue <= 0 || quantityToIssue > remainingQuantity) {
+        // FIX: Use compareTo for all comparisons
+        if (quantityToIssue.compareTo(BigDecimal.ZERO) <= 0 || quantityToIssue.compareTo(remainingQuantity) > 0) {
             throw new IllegalArgumentException("Issued quantity must be positive and not exceed the remaining requested quantity (" + remainingQuantity + ").");
         }
 
-        if (itemToIssue.getCurrentStockQuantity() < quantityToIssue) {
+        if (itemToIssue.getCurrentStockQuantity().compareTo(quantityToIssue) < 0) {
             throw new IllegalArgumentException("Insufficient stock for item '" + itemToIssue.getItemCode() + "'. Available: " + itemToIssue.getCurrentStockQuantity() + ", Requested: " + quantityToIssue);
         }
 
-        itemToIssue.setCurrentStockQuantity(itemToIssue.getCurrentStockQuantity() - quantityToIssue);
+        itemToIssue.setCurrentStockQuantity(itemToIssue.getCurrentStockQuantity().subtract(quantityToIssue));
         itemToIssue.setLastUpdatedByUser(storeKeeper);
         itemToIssue.setLastUpdatedAt(LocalDateTime.now());
         inventoryItemRepository.save(itemToIssue);
@@ -119,8 +121,7 @@ public class InventoryRequestService {
         issue.setIssuedAt(LocalDateTime.now());
 
         BigDecimal unitPrice = itemToIssue.getUnitPrice();
-        BigDecimal issuedQuantityBd = BigDecimal.valueOf(quantityToIssue);
-        BigDecimal calculatedItemValue = unitPrice.multiply(issuedQuantityBd);
+        BigDecimal calculatedItemValue = unitPrice.multiply(quantityToIssue);
         issue.setItemValue(calculatedItemValue);
 
         issue.setPurpose(requestLineItem.getRequest().getPurpose());
@@ -128,118 +129,84 @@ public class InventoryRequestService {
 
         inventoryIssueRepository.save(issue);
 
-        if ((alreadyIssuedQuantity + quantityToIssue) >= requestedQuantity) {
+        // FIX: Use compareTo for status check
+        if ((alreadyIssuedQuantity.add(quantityToIssue)).compareTo(requestedQuantity) >= 0) {
             requestLineItem.setStatus(RequestLineItemStatus.ISSUED);
         } else {
             requestLineItem.setStatus(RequestLineItemStatus.ISSUED_PARTIALLY);
         }
         inventoryRequestLineItemRepository.save(requestLineItem);
 
-        updateOverallRequestStatus(requestLineItem.getRequest());
+        updateOverallRequestStatus(requestLineItem.getRequest(), storeKeeper);
 
         return issue;
     }
-
     //Branch Issue Methods
     @Transactional
     public InventoryRequest issueBatchItems(BatchIssueRequestDTO issueDTO) {
+        // 1. Validate that the batch is not empty before proceeding
         if (issueDTO.getItemsToIssue() == null || issueDTO.getItemsToIssue().isEmpty()) {
-            throw new IllegalArgumentException("Batch issue must contain at least one item.");
+            throw new IllegalArgumentException("Batch of items to issue cannot be empty.");
         }
 
-        User storeKeeper = userRepository.findById(issueDTO.getIssuedByUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Store keeper user with ID '" + issueDTO.getIssuedByUserId() + "' not found."));
+        // 2. Find the parent request (using the ID from the first item in the batch)
+        // This is now safe as we've checked for an empty list
+        Long parentRequestId = issueDTO.getItemsToIssue().get(0).getInventoryRequestLineItemId();
+        InventoryRequest parentRequest = inventoryRequestLineItemRepository.findById(parentRequestId)
+                .map(InventoryRequestLineItem::getRequest)
+                .orElseThrow(() -> new IllegalArgumentException("Parent Inventory Request not found for batch."));
 
-        // Retrieve all line items for the batch
-        List<Long> lineItemIds = issueDTO.getItemsToIssue().stream()
-                .map(BatchIssueLineItemDTO::getInventoryRequestLineItemId)
-                .collect(Collectors.toList());
-
-        List<InventoryRequestLineItem> lineItems = inventoryRequestLineItemRepository.findAllById(lineItemIds);
-
-        if (lineItems.size() != lineItemIds.size()) {
-            throw new IllegalArgumentException("One or more line items not found.");
-        }
-
-
-        // Ensure all line items belong to the same parent request
-        Set<Long> parentRequestIds = lineItems.stream()
-                .map(item -> item.getRequest().getId())
+        // 3. Validate that all items belong to the same parent request.
+        Set<Long> parentRequestIds = issueDTO.getItemsToIssue().stream()
+                .map(item -> inventoryRequestLineItemRepository.findById(item.getInventoryRequestLineItemId()).get().getRequest().getId())
                 .collect(Collectors.toSet());
         if (parentRequestIds.size() > 1) {
             throw new IllegalArgumentException("All items in a batch must belong to the same inventory request.");
         }
 
-        // Ensure all items are of the same type (e.g., Material, Stationary)
-        Set<ItemType> itemTypes = lineItems.stream()
-                .map(item -> item.getRequestedItem().getItemType())
-                .collect(Collectors.toSet());
-        if (itemTypes.size() > 1) {
-            throw new IllegalArgumentException("All items in a batch must be of the same type.");
-        }
+        // 4. Find the storekeeper user
+        User storeKeeper = userRepository.findById(issueDTO.getIssuedByUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Store keeper user with ID '" + issueDTO.getIssuedByUserId() + "' not found."));
 
-        // Get the parent request
-        InventoryRequest parentRequest = lineItems.get(0).getRequest();
-
-        // Process each line item individually within the batch transaction
-        for (BatchIssueLineItemDTO itemToIssue : issueDTO.getItemsToIssue()) {
-
-            InventoryRequestLineItem requestLineItem = lineItems.stream()
-                    .filter(li -> li.getId().equals(itemToIssue.getInventoryRequestLineItemId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Line item not found in batch list."));
-
-            Double requestedQuantity = requestLineItem.getRequestedQuantity();
-            Double quantityToIssue = itemToIssue.getIssuedQuantity();
-
-            Double alreadyIssuedQuantity = inventoryIssueRepository.sumIssuedQuantityByRequestLineItemId(requestLineItem.getId());
-            Double remainingQuantity = requestedQuantity - alreadyIssuedQuantity;
-
-            if (quantityToIssue <= 0 || quantityToIssue > remainingQuantity) {
-                throw new IllegalArgumentException("Issued quantity for item '" + requestLineItem.getRequestedItem().getItemCode() + "' is invalid. Remaining: " + remainingQuantity);
-            }
-
-            InventoryItem inventoryItem = requestLineItem.getRequestedItem();
-            if (inventoryItem.getCurrentStockQuantity() < quantityToIssue) {
-                throw new IllegalArgumentException("Insufficient stock for item '" + inventoryItem.getItemCode() + "'. Available: " + inventoryItem.getCurrentStockQuantity());
-            }
+        // 5. Loop through the items in the DTO to issue only the selected items
+        for (BatchIssueItemDTO itemDTO : issueDTO.getItemsToIssue()) {
+            InventoryRequestLineItem requestLineItem = inventoryRequestLineItemRepository.findById(itemDTO.getInventoryRequestLineItemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Inventory Request Line Item with ID '" + itemDTO.getInventoryRequestLineItemId() + "' not found."));
 
             // Deduct stock and create issue record
-            inventoryItem.setCurrentStockQuantity(inventoryItem.getCurrentStockQuantity() - quantityToIssue);
+            InventoryItem inventoryItem = requestLineItem.getRequestedItem();
+            if (inventoryItem.getCurrentStockQuantity().compareTo(itemDTO.getIssuedQuantity()) < 0) {
+                throw new IllegalArgumentException("Insufficient stock for item: " + inventoryItem.getItemName());
+            }
+            inventoryItem.setCurrentStockQuantity(inventoryItem.getCurrentStockQuantity().subtract(itemDTO.getIssuedQuantity()));
             inventoryItemRepository.save(inventoryItem);
 
             InventoryIssue issue = new InventoryIssue();
             issue.setRequestLineItem(requestLineItem);
             issue.setIssuedItem(inventoryItem);
-            issue.setIssuedQuantity(quantityToIssue);
+            issue.setIssuedQuantity(itemDTO.getIssuedQuantity());
             issue.setIssuedByUser(storeKeeper);
             issue.setIssuedToUser(parentRequest.getRequester());
             issue.setIssuedAt(LocalDateTime.now());
+            issue.setInventoryRequest(parentRequest);
+            issue.setNotes(issueDTO.getIssueNotes());
 
             BigDecimal unitPrice = inventoryItem.getUnitPrice();
-            BigDecimal issuedQuantityBd = BigDecimal.valueOf(quantityToIssue);
+            BigDecimal issuedQuantityBd = itemDTO.getIssuedQuantity();
             BigDecimal calculatedItemValue = unitPrice.multiply(issuedQuantityBd);
             issue.setItemValue(calculatedItemValue);
 
-            issue.setPurpose(parentRequest.getPurpose());
-            issue.setNotes(issueDTO.getIssueNotes());
             inventoryIssueRepository.save(issue);
 
-            // Update line item status
-            if ((alreadyIssuedQuantity + quantityToIssue) >= requestedQuantity) {
-                requestLineItem.setStatus(RequestLineItemStatus.ISSUED);
-            } else {
-                requestLineItem.setStatus(RequestLineItemStatus.ISSUED_PARTIALLY);
-            }
+            requestLineItem.setStatus(RequestLineItemStatus.ISSUED);
             inventoryRequestLineItemRepository.save(requestLineItem);
         }
 
-        // Update the overall request status once for the entire batch
-        updateOverallRequestStatus(parentRequest);
+        // 6. Update the overall request status once all items in the batch are processed
+        updateOverallRequestStatus(parentRequest, storeKeeper);
 
         return parentRequest;
     }
-
 
     @Transactional
     public InventoryRequestLineItem markRequestLineItemNoStock(Long inventoryRequestLineItemId, NoStockRequestDTO noStockDTO) {
@@ -256,24 +223,34 @@ public class InventoryRequestService {
         requestLineItem.setStatus(RequestLineItemStatus.NO_STOCK);
         inventoryRequestLineItemRepository.save(requestLineItem);
 
-        updateOverallRequestStatus(requestLineItem.getRequest());
+        updateOverallRequestStatus(requestLineItem.getRequest(),storeKeeper);
 
         return requestLineItem;
     }
 
-    private void updateOverallRequestStatus(InventoryRequest request) {
-        Set<RequestLineItemStatus> lineItemStatuses = request.getLineItems().stream()
-                .map(InventoryRequestLineItem::getStatus)
-                .collect(Collectors.toSet());
-
-        if (lineItemStatuses.contains(RequestLineItemStatus.PENDING) || lineItemStatuses.contains(RequestLineItemStatus.ISSUED_PARTIALLY)) {
-            request.setStatus(RequestStatus.ISSUED_PARTIALLY);
-        } else if (lineItemStatuses.contains(RequestLineItemStatus.ISSUED) && lineItemStatuses.size() == 1) {
-            request.setStatus(RequestStatus.ISSUED);
-        } else {
-            request.setStatus(RequestStatus.REJECTED);
+    public void updateOverallRequestStatus(InventoryRequest parentRequest, User processedByUser) {
+        // Reload the request to get the latest status of all line items
+        parentRequest = inventoryRequestRepository.findById(parentRequest.getId()).orElse(null);
+        if (parentRequest == null) {
+            return;
         }
 
-        inventoryRequestRepository.save(request);
+        // Check if any line item is still PENDING
+        boolean hasPendingItems = parentRequest.getLineItems().stream()
+                .anyMatch(lineItem -> lineItem.getStatus() == RequestLineItemStatus.PENDING);
+
+        // If there is any pending item, the overall status is PENDING
+        if (hasPendingItems) {
+            parentRequest.setStatus(RequestStatus.PENDING);
+        } else {
+            // If there are no pending items, the overall status is ISSUED
+            parentRequest.setStatus(RequestStatus.ISSUED);
+            parentRequest.setProcessedBy(processedByUser);
+            parentRequest.setProcessedAt(LocalDateTime.now());
+        }
+
+        inventoryRequestRepository.save(parentRequest);
     }
+
+
 }

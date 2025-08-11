@@ -36,20 +36,20 @@ public class InventoryItem {
     private String unitOfMeasurement;
 
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_category_id", nullable = false)
     private ItemCategory itemCategory;
 
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_type_id",nullable = false)
     private ItemType itemType;
 
     @Column(name = "current_stock_quantity", nullable = false)
-    private Double currentStockQuantity;
+    private BigDecimal currentStockQuantity;
 
     @Column(name = "minimum_stock_level", nullable = false)
-    private Double minimumStockLevel;
+    private BigDecimal minimumStockLevel;
 
     @Column(name = "location_in_store")
     private String locationInStore;
@@ -58,7 +58,7 @@ public class InventoryItem {
     private BigDecimal unitPrice;
 
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id", nullable = false, updatable = false)
     private User creatingUser;
 
@@ -77,15 +77,16 @@ public class InventoryItem {
     private StockStatus stockStatus;
 
     public StockStatus getStockStatus() {
-        if(this.currentStockQuantity <= 0){
-            return StockStatus.OUT_OF_STOCK;
-        } else if (this.currentStockQuantity <= this.minimumStockLevel) {
-            return StockStatus.LOW;
-        }else{
-            return StockStatus.GOOD;
 
+            if (this.currentStockQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+                return StockStatus.OUT_OF_STOCK;
+            } else if (this.currentStockQuantity.compareTo(this.minimumStockLevel) <= 0) {
+                return StockStatus.LOW;
+            } else {
+                return StockStatus.GOOD;
+            }
         }
-    }
+
 
 
 }

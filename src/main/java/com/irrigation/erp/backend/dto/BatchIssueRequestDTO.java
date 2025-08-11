@@ -2,6 +2,7 @@ package com.irrigation.erp.backend.dto;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -18,9 +19,9 @@ public class BatchIssueRequestDTO {
     @NotNull(message = "Issue notes cannot be null")
     private String issueNotes;
 
-    @NotNull(message = "Batch issue must contain at least one item")
-    @Size(min = 1, message = "Batch issue must contain at least one item")
+
     @Valid
-    private List<BatchIssueLineItemDTO> itemsToIssue;
+    @NotEmpty(message = "Items to issue cannot be empty")
+    private List<BatchIssueItemDTO> itemsToIssue;
 
 }
