@@ -71,7 +71,7 @@ public class InventoryRequestService {
     }
 
     public List<InventoryRequest> getAllPendingInventoryRequestsWithLineItems() {
-        return inventoryRequestRepository.findByStatusWithLineItems(RequestStatus.PENDING);
+        return inventoryRequestRepository.findByStatus(RequestStatus.PENDING);
     }
 
     public Optional<InventoryRequest> getInventoryRequestById(Long requestId) {

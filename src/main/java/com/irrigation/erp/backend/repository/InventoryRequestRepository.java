@@ -13,12 +13,20 @@ import java.util.Optional;
 
 @Repository
 public interface InventoryRequestRepository extends JpaRepository<InventoryRequest, Long> {
-    @EntityGraph(attributePaths = {"lineItems", "lineItems.inventoryItem", "lineItems.inventoryItem.createdBy", "lineItems.inventoryItem.createdBy.role", "lineItems.inventoryItem.itemCategory", "lineItems.inventoryItem.itemType"})
-    @Query("SELECT r FROM InventoryRequest r JOIN FETCH r.lineItems WHERE r.status = :status")
-    List<InventoryRequest> findByStatusWithLineItems(@Param("status") RequestStatus status);
+//    @EntityGraph(attributePaths = {"lineItems", "lineItems.inventoryItem", "lineItems.inventoryItem.createdBy", "lineItems.inventoryItem.createdBy.role", "lineItems.inventoryItem.itemCategory", "lineItems.inventoryItem.itemType"})
+//    @Query("SELECT r FROM InventoryRequest r JOIN FETCH r.lineItems WHERE r.status = :status")
+//    List<InventoryRequest> findByStatusWithLineItems(@Param("status") RequestStatus status);
+//
+//
+//
+//    @EntityGraph(attributePaths = {"requester", "lineItems", "lineItems.requestedItem"})
+//    List<InventoryRequest> findByStatus(RequestStatus status);
+//
+//
+//
+//
 
 
-
-    @EntityGraph(attributePaths = "lineItems")
-    List<InventoryRequest> findByStatus(RequestStatus requestStatus);
+    @EntityGraph(attributePaths = {"requester", "lineItems", "lineItems.requestedItem"})
+    List<InventoryRequest> findByStatus(RequestStatus status);
 }
