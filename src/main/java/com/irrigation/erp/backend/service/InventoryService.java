@@ -135,8 +135,34 @@ public class InventoryService {
         return inventoryItemRepository.findAll();
     }
 
+    // NEW METHOD: Get inventory items by category name
+    public List<InventoryItem> getInventoryItemsByCategory(String categoryName) {
+        ItemCategory category = itemCategoryRepository.findByName(categoryName)
+                .orElseThrow(() -> new IllegalArgumentException("Item Category '" + categoryName + "' not found."));
+        return inventoryItemRepository.findByItemCategory(category);
+    }
+
+    // NEW METHOD: Get inventory items by category ID
+    public List<InventoryItem> getInventoryItemsByCategoryId(Long categoryId) {
+        ItemCategory category = itemCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Item Category with ID '" + categoryId + "' not found."));
+        return inventoryItemRepository.findByItemCategory(category);
+    }
+
+    // NEW METHOD: Get all categories with their inventory items count
+    public List<ItemCategory> getAllCategoriesWithItemCount() {
+        return itemCategoryRepository.findAll();
+    }
+
     public List<InventoryItem> getLowStockItems() {
         return inventoryItemRepository.findAll().stream()
+                .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
+                .collect(Collectors.toList());
+    }
+
+    // NEW METHOD: Get low stock items by category
+    public List<InventoryItem> getLowStockItemsByCategory(String categoryName) {
+        return getInventoryItemsByCategory(categoryName).stream()
                 .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
                 .collect(Collectors.toList());
     }

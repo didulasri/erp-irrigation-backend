@@ -131,6 +131,48 @@ public class InventoryController {
         return ResponseEntity.ok(dtos);
     }
 
+    // NEW ENDPOINT: Get inventory items by category name
+    @GetMapping("/category/{categoryName}")
+    public ResponseEntity<List<InventoryItemResponseDTO>> getInventoryItemsByCategory(@PathVariable String categoryName) {
+        try {
+            List<InventoryItem> items = inventoryService.getInventoryItemsByCategory(categoryName);
+            List<InventoryItemResponseDTO> dtos = items.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    // NEW ENDPOINT: Get inventory items by category ID
+    @GetMapping("/category-id/{categoryId}")
+    public ResponseEntity<List<InventoryItemResponseDTO>> getInventoryItemsByCategoryId(@PathVariable Long categoryId) {
+        try {
+            List<InventoryItem> items = inventoryService.getInventoryItemsByCategoryId(categoryId);
+            List<InventoryItemResponseDTO> dtos = items.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    // NEW ENDPOINT: Get low stock items by category
+    @GetMapping("/category/{categoryName}/low-stock")
+    public ResponseEntity<List<InventoryItemResponseDTO>> getLowStockItemsByCategory(@PathVariable String categoryName) {
+        try {
+            List<InventoryItem> items = inventoryService.getLowStockItemsByCategory(categoryName);
+            List<InventoryItemResponseDTO> dtos = items.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
     @GetMapping("/{itemCode}")
     public ResponseEntity<InventoryItemResponseDTO> getInventoryItem(@PathVariable String itemCode){
         return inventoryService.getInventoryItemByItemCode(itemCode)
@@ -147,6 +189,7 @@ public class InventoryController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
+
 
     @DeleteMapping("/{itemCode}")
     public ResponseEntity<Void> deactivateInventoryItem(@PathVariable String itemCode, @RequestParam Long updatingUserId) {
