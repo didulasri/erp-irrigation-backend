@@ -1,5 +1,6 @@
 package com.irrigation.erp.backend.controller;
 
+
 import com.irrigation.erp.backend.model.User;
 import com.irrigation.erp.backend.model.Role;
 import com.irrigation.erp.backend.repository.UserRepository;
@@ -11,9 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:5173") // allow React frontend
-@RestController
-@RequestMapping("/api/users")
+
 public class UserController {
 
     private final UserRepository userRepository;
@@ -26,6 +25,10 @@ public class UserController {
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
+  
+  
+    @Autowired
+    private UserService userService;
 
     // Get all users
     @GetMapping
@@ -51,4 +54,24 @@ public class UserController {
     public void deleteUser(@PathVariable Long id) {
         userRepository.deleteById(id);
     }
+
+
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        UserDto user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String name) {
+        List<UserDto> users = userService.searchUsersByName(name);
+        return ResponseEntity.ok(users);
+    }
 }
+
