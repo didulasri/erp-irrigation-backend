@@ -1,36 +1,75 @@
 package com.irrigation.erp.backend.controller;
 
 import com.irrigation.erp.backend.dto.UserDto;
+import com.irrigation.erp.backend.model.User;
+import com.irrigation.erp.backend.model.Role;
 import com.irrigation.erp.backend.service.UserService;
+import com.irrigation.erp.backend.repository.UserRepository;
+import com.irrigation.erp.backend.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // Support both ports
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // Support both React dev ports
 public class UserController {
 
     @Autowired
     private UserService userService;
 
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public UserController(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    // Get all users (using service layer)
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
+    // Get user by ID (using service layer)
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
+    // Search users by name (using service layer)
     @GetMapping("/search")
     public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String name) {
         List<UserDto> users = userService.searchUsersByName(name);
         return ResponseEntity.ok(users);
+    }
+
+    // Add new user (direct repository access for user creation)
+    @PostMapping
+    public ResponseEntity<User> addUser(@RequestBody User user) {
+        // Set role
+        Role role = roleRepository.findByName(user.getRole().getName());
+        user.setRole(role);
+
+        // Hash password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.ok(savedUser);
+    }
+
+    // Delete user (direct repository access)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
