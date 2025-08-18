@@ -1,5 +1,6 @@
 package com.irrigation.erp.backend.dto;
 
+import com.irrigation.erp.backend.model.User; 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,5 +31,17 @@ public class UserDto {
     public String getFullName() {
         return (firstName != null ? firstName : "") +
                 (lastName != null ? " " + lastName : "");
+    }
+    public static UserDto fromEntity(User user) {
+        return new UserDto(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getContactNumber(),
+                user.getRole() != null ? user.getRole().getName() : "N/A",
+                user.getIsActive()
+        );
     }
 }
