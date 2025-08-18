@@ -1,10 +1,13 @@
 package com.irrigation.erp.backend.controller;
 
 import com.irrigation.erp.backend.dto.InventoryIssueResponseDTO;
+import com.irrigation.erp.backend.dto.OtherDistributionsResponseDTO;
 import com.irrigation.erp.backend.model.InventoryIssue;
 import com.irrigation.erp.backend.service.InventoryIssueService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,39 +65,88 @@ public class InventoryIssueController {
         return dto;
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<InventoryIssueResponseDTO>> getAllIssues() {
+        try {
+            List<InventoryIssue> issues = inventoryIssueService.getAllIssues();
+            List<InventoryIssueResponseDTO> dtos = issues.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching all issues: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/item/{itemId}")
     public ResponseEntity<List<InventoryIssueResponseDTO>> getIssueHistoryByItemId(@PathVariable Long itemId) {
-        List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemId(itemId);
-        List<InventoryIssueResponseDTO> dtos = issues.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        try {
+            List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemId(itemId);
+            List<InventoryIssueResponseDTO> dtos = issues.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by item ID: " + e.getMessage());
+        }
     }
 
     @GetMapping("/item/code/{itemCode}")
     public ResponseEntity<List<InventoryIssueResponseDTO>> getIssueHistoryByItemCode(@PathVariable String itemCode) {
-        List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemCode(itemCode);
-        List<InventoryIssueResponseDTO> dtos = issues.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-
-    @GetMapping("/all")
-    public ResponseEntity<List<InventoryIssueResponseDTO>> getAllIssues() {
-        List<InventoryIssue> issues = inventoryIssueService.getAllIssues();
-        List<InventoryIssueResponseDTO> dtos = issues.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        try {
+            List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemCode(itemCode);
+            List<InventoryIssueResponseDTO> dtos = issues.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by item code: " + e.getMessage());
+        }
     }
 
     @GetMapping("/request/{requestId}")
     public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByRequestId(@PathVariable Long requestId) {
-        List<InventoryIssue> issues = inventoryIssueService.getIssuesByRequestId(requestId);
-        List<InventoryIssueResponseDTO> dtos = issues.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        try {
+            List<InventoryIssue> issues = inventoryIssueService.getIssuesByRequestId(requestId);
+            List<InventoryIssueResponseDTO> dtos = issues.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by request ID: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVariable Long userId) {
+        try {
+            List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
+            List<InventoryIssueResponseDTO> dtos = issues.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by user ID: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/{userId}/other-distributions")
+    public ResponseEntity<OtherDistributionsResponseDTO> getOtherDistributionsByUserId(@PathVariable Long userId) {
+        try {
+            OtherDistributionsResponseDTO distributions = inventoryIssueService.getOtherDistributionsByUserId(userId);
+            return ResponseEntity.ok(distributions);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching distributions: " + e.getMessage());
+        }
     }
 }
