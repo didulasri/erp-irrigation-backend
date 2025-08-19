@@ -36,7 +36,7 @@ public class User {
     private String contactNumber;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id",nullable = false)
+    @JoinColumn(name = "role_id")
     private Role role;
 
     @Column(name= "is_Active",nullable = false)
@@ -54,17 +54,17 @@ public class User {
     @Column(name = "last_password_change")
     private LocalDateTime lastPasswordChange;
 
-    public User(String username, String password, String email, String firstName, String lastName, String contactNumber, Role role) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.contactNumber = contactNumber;
-        this.role = role;
+    // public User(String username, String password, String email, String firstName, String lastName, String contactNumber, Role role) {
+    //     this.username = username;
+    //     this.password = password;
+    //     this.email = email;
+    //     this.firstName = firstName;
+    //     this.lastName = lastName;
+    //     this.contactNumber = contactNumber;
+    //     this.role = role;
 
 
-    }
+    // }
 
 
 
