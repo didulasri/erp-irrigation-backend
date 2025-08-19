@@ -54,6 +54,9 @@ public class User {
     @Column(name = "last_password_change")
     private LocalDateTime lastPasswordChange;
 
+    @Column(nullable = true)  
+    private String branch;
+
     // public User(String username, String password, String email, String firstName, String lastName, String contactNumber, Role role) {
     //     this.username = username;
     //     this.password = password;
