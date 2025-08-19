@@ -50,6 +50,8 @@ public class UserService {
             dto.setRoleName(user.getRole().getName());
         }
 
+        dto.setBranch(user.getBranch());
+
         return dto;
     }
 }
