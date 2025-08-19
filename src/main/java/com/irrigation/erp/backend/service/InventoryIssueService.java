@@ -47,8 +47,31 @@ public class InventoryIssueService {
 
     // NEW METHOD: Get issues by user ID (issued to user)
     public List<InventoryIssue> getIssuesByUserId(Long userId) {
-        return inventoryIssueRepository.findByIssuedToUserIdOrderByIssuedAtDesc(userId);
+    List<InventoryIssue> issues = inventoryIssueRepository.findByIssuedToUserIdOrderByIssuedAtDesc(userId);
+
+    // Force fetch nested lazy objects to avoid nulls in DTO
+    for (InventoryIssue issue : issues) {
+        if (issue.getIssuedItem() != null) {
+            issue.getIssuedItem().getItemName();  // access to force load
+            issue.getIssuedItem().getItemCode();
+        }
+        if (issue.getIssuedByUser() != null) {
+            issue.getIssuedByUser().getUsername();
+        }
+        if (issue.getIssuedToUser() != null) {
+            issue.getIssuedToUser().getUsername();
+        }
+        if (issue.getInventoryRequest() != null) {
+            issue.getInventoryRequest().getId();
+        }
+        if (issue.getRequestLineItem() != null) {
+            issue.getRequestLineItem().getRequestedQuantity();
+        }
     }
+
+    return issues;
+}
+
 
     // ALTERNATIVE METHOD: Get issues by user ID (issued by user)
     public List<InventoryIssue> getIssuesByIssuedByUserId(Long userId) {
