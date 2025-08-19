@@ -60,4 +60,8 @@ public class AuthController {
         List<RoleResponseDTO> roles = authService.getAllRoles();
         return ResponseEntity.ok(roles);
     }
+
+
+
+
 }
