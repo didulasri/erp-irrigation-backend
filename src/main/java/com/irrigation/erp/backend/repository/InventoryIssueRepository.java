@@ -15,15 +15,27 @@ public interface InventoryIssueRepository extends JpaRepository<InventoryIssue, 
     @Query("SELECT COALESCE(SUM(i.issuedQuantity), 0.0) FROM InventoryIssue i WHERE i.requestLineItem.id = :lineItemId")
     Double sumIssuedQuantityByRequestLineItemId(@Param("lineItemId") Long lineItemId);
 
-    // New methods for getting issue history
+    // Existing methods
     List<InventoryIssue> findByIssuedItemOrderByIssuedAtDesc(InventoryItem issuedItem);
-
     List<InventoryIssue> findAllByOrderByIssuedAtDesc();
-
     List<InventoryIssue> findByInventoryRequestIdOrderByIssuedAtDesc(Long requestId);
-
-    // Additional useful queries
     List<InventoryIssue> findByIssuedByUserIdOrderByIssuedAtDesc(Long userId);
-
     List<InventoryIssue> findByIssuedToUserIdOrderByIssuedAtDesc(Long userId);
+
+    // NEW METHOD: Get issues for a specific user with Non-Material items only
+    @Query("SELECT ii FROM InventoryIssue ii " +
+            "JOIN ii.issuedItem item " +
+            "JOIN item.itemType type " +
+            "WHERE ii.issuedToUser.id = :userId " +
+            "AND type.name = 'Non Materials' " +
+            "ORDER BY ii.issuedAt DESC")
+    List<InventoryIssue> findNonMaterialIssuesByIssuedToUserId(@Param("userId") Long userId);
+
+    // NEW METHOD: Get all Non-Material item names that have been issued
+    @Query("SELECT DISTINCT item.itemName FROM InventoryIssue ii " +
+            "JOIN ii.issuedItem item " +
+            "JOIN item.itemType type " +
+            "WHERE type.name = 'Non Materials' " +
+            "ORDER BY item.itemName")
+    List<String> findDistinctNonMaterialItemNames();
 }
