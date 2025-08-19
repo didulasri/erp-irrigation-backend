@@ -2,11 +2,14 @@ package com.irrigation.erp.backend.controller;
 
 import com.irrigation.erp.backend.dto.LoginRequest;
 import com.irrigation.erp.backend.dto.LoginResponse;
+import com.irrigation.erp.backend.dto.RoleResponseDTO;
 import com.irrigation.erp.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -51,4 +54,14 @@ public class AuthController {
         boolean mustChange = authService.mustChangePassword(email);
         return ResponseEntity.ok(mustChange);
     }
+
+    @GetMapping("/roles")
+    public ResponseEntity<List<RoleResponseDTO>> getAllRoles() {
+        List<RoleResponseDTO> roles = authService.getAllRoles();
+        return ResponseEntity.ok(roles);
+    }
+
+
+
+
 }
