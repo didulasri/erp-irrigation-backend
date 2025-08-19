@@ -93,6 +93,17 @@ public class InventoryRequestController {
         return ResponseEntity.ok(dtos);
     }
 
+    @GetMapping("/issued")
+    public ResponseEntity<List<InventoryRequestResponseDTO>> getIssuedInventoryRequests() {
+        List<InventoryRequest> issuedRequests = inventoryRequestService.getAllIssuedInventoryRequestsWithLineItems();
+        List<InventoryRequestResponseDTO> dtos = issuedRequests.stream()
+                .map(this::convertToRequestDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+
+
     @PatchMapping("/line-items/{lineItemId}/issue")
     public ResponseEntity<InventoryRequestResponseDTO> issueRequestedItem(@PathVariable("lineItemId") Long inventoryRequestLineItemId, @Valid @RequestBody IssueRequestDTO issueDTO) {
         try {
