@@ -3,6 +3,7 @@ package com.irrigation.erp.backend.controller;
 
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
+import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.service.PurchaseRequestService;
 import jakarta.validation.Valid;
@@ -52,6 +53,16 @@ public class PurchaseRequestController {
         try {
             List<PurchaseResponseDTO> requests = purchaseRequestService.getAllPurchaseRequests();
             return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/purchase-requests-Form/{id}")
+    public ResponseEntity<PurchaseResponseFormDTO> getFormPurchaseRequests(@PathVariable Long id) {
+        try {
+            PurchaseResponseFormDTO request = purchaseRequestService.getPurchaseRequestById(id);
+            return ResponseEntity.ok(request);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
