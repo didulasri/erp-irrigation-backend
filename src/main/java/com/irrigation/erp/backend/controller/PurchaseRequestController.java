@@ -2,6 +2,7 @@ package com.irrigation.erp.backend.controller;
 
 
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
+import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.service.PurchaseRequestService;
 import jakarta.validation.Valid;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/purchase-requests")
@@ -44,5 +47,15 @@ public class PurchaseRequestController {
         }
     }
 
+    @GetMapping("/purchase-requests")
+    public ResponseEntity<List<PurchaseResponseDTO>> getAllPurchaseRequests() {
+        try {
+            List<PurchaseResponseDTO> requests = purchaseRequestService.getAllPurchaseRequests();
+            return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 }
+
