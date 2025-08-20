@@ -124,19 +124,20 @@ public class InventoryIssueController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVariable Long userId) {
-        try {
-            List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
-            List<InventoryIssueResponseDTO> dtos = issues.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by user ID: " + e.getMessage());
-        }
+public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVariable Long userId) {
+    try {
+        List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
+        List<InventoryIssueResponseDTO> dtos = issues.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    } catch (IllegalArgumentException e) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+    } catch (Exception e) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by user ID: " + e.getMessage());
     }
+}
+
 
     @GetMapping("/user/{userId}/other-distributions")
     public ResponseEntity<OtherDistributionsResponseDTO> getOtherDistributionsByUserId(@PathVariable Long userId) {
