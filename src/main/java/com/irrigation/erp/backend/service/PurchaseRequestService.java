@@ -3,6 +3,7 @@ package com.irrigation.erp.backend.service;
 
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
+import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.model.PurchaseRequestLineItem;
 import com.irrigation.erp.backend.repository.PurchaseRequestRepository;
@@ -91,4 +92,34 @@ public class PurchaseRequestService {
         return purchaseRequestRepository.findAllPurchaseRequestsWithItemNames();
     }
 
+
+    public PurchaseResponseFormDTO getPurchaseRequestById(Long id) {
+        PurchaseRequest pr = purchaseRequestRepository.findByIdWithItems(id)
+                .orElseThrow(() -> new IllegalArgumentException("Purchase request with ID " + id + " not found."));
+
+        String requestedByName = purchaseRequestRepository.findUserFullNameById(pr.getRequestedByUserId());
+
+        return new PurchaseResponseFormDTO(
+                pr.getId(),                 // id
+                pr.getRefNo(),              // refNo
+                requestedByName,            // requestedByName
+                pr.getRequestedAt(),        // requestedAt
+                pr.getTotalValue(),         // totalValue
+                pr.getDivision(),           // division
+                pr.getSubDivision(),        // subDivision
+                pr.getProgramme(),          // programme
+                pr.getProject(),            // project
+                pr.getObject(),             // object
+                pr.getStatus(),             // status
+                pr.getItems().stream()
+                        .map(li -> new PurchaseResponseFormDTO.PurchaseLineItemDTO(
+                                li.getId(),
+                                li.getInventoryRequestLineItemId(),
+                                li.getItemName(),
+                                li.getQuantity(),
+                                li.getEstimatedPrice()
+                        ))
+                        .collect(Collectors.toList())
+        );
+    }
 }
