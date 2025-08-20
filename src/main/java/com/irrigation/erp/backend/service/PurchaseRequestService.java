@@ -2,6 +2,7 @@ package com.irrigation.erp.backend.service;
 
 
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
+import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.model.PurchaseRequestLineItem;
 import com.irrigation.erp.backend.repository.PurchaseRequestRepository;
@@ -86,5 +87,8 @@ public class PurchaseRequestService {
                 .orElseThrow(() -> new IllegalArgumentException("Purchase request with ID " + requestId + " not found."));
     }
 
+    public List<PurchaseResponseDTO> getAllPurchaseRequests() {
+        return purchaseRequestRepository.findAllPurchaseRequestsWithItemNames();
+    }
 
 }
