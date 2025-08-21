@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import java.util.Collections;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,10 @@ public class InventoryIssueController {
             dto.setIssuedItemId(inventoryIssue.getIssuedItem().getId());
             dto.setIssuedItemCode(inventoryIssue.getIssuedItem().getItemCode());
             dto.setIssuedItemName(inventoryIssue.getIssuedItem().getItemName());
+
+            if (inventoryIssue.getIssuedItem().getItemType() != null) {
+            dto.setItemType(inventoryIssue.getIssuedItem().getItemType().getName());
+        }
         }
 
         // Set user details
@@ -125,17 +130,18 @@ public class InventoryIssueController {
 
     @GetMapping("/user/{userId}")
 public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVariable Long userId) {
-    try {
-        List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
-        List<InventoryIssueResponseDTO> dtos = issues.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    } catch (IllegalArgumentException e) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-    } catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching issues by user ID: " + e.getMessage());
+    List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
+
+    // ensure it's never null
+    if (issues == null) {
+        issues = Collections.emptyList();
     }
+
+    List<InventoryIssueResponseDTO> dtos = issues.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+
+    return ResponseEntity.ok(dtos); // [] if no records
 }
 
 
