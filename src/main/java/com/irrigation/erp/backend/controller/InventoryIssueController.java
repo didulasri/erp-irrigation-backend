@@ -156,4 +156,18 @@ public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVa
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching distributions: " + e.getMessage());
         }
     }
+
+    @PutMapping("/{id}")
+public ResponseEntity<InventoryIssueResponseDTO> updateIssue(
+        @PathVariable Long id,
+        @RequestBody InventoryIssue updatedIssue) {
+    try {
+        InventoryIssue savedIssue = inventoryIssueService.updateIssue(id, updatedIssue);
+        return ResponseEntity.ok(convertToDto(savedIssue));
+    } catch (IllegalArgumentException e) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+    } catch (Exception e) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating issue: " + e.getMessage());
+    }
+}
 }
