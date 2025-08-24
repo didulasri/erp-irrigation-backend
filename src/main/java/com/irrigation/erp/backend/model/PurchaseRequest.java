@@ -54,7 +54,5 @@ public class PurchaseRequest {
     @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PurchaseRequestLineItem> items;
 
-
-
-
 }
+
