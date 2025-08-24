@@ -24,6 +24,53 @@ public class InventoryIssueService {
         this.inventoryItemRepository = inventoryItemRepository;
     }
 
+    // ----------------- CRUD METHODS -----------------
+
+    public InventoryIssue createIssue(InventoryIssue issue) {
+        return inventoryIssueRepository.save(issue);
+    }
+
+    public Optional<InventoryIssue> getIssueById(Long id) {
+        return inventoryIssueRepository.findById(id);
+    }
+
+    public InventoryIssue updateIssue(Long id, InventoryIssue issueDetails) {
+        return inventoryIssueRepository.findById(id).map(existing -> {
+            // Update allowed fields
+            existing.setIssuedAt(issueDetails.getIssuedAt());
+            existing.setIssuedQuantity(issueDetails.getIssuedQuantity());
+            existing.setItemValue(issueDetails.getItemValue());
+            existing.setPurpose(issueDetails.getPurpose());
+            existing.setNotes(issueDetails.getNotes());
+
+            // Relations (optional – only set if provided)
+            if (issueDetails.getIssuedItem() != null) {
+                existing.setIssuedItem(issueDetails.getIssuedItem());
+            }
+            if (issueDetails.getIssuedByUser() != null) {
+                existing.setIssuedByUser(issueDetails.getIssuedByUser());
+            }
+            if (issueDetails.getIssuedToUser() != null) {
+                existing.setIssuedToUser(issueDetails.getIssuedToUser());
+            }
+            if (issueDetails.getInventoryRequest() != null) {
+                existing.setInventoryRequest(issueDetails.getInventoryRequest());
+            }
+            if (issueDetails.getRequestLineItem() != null) {
+                existing.setRequestLineItem(issueDetails.getRequestLineItem());
+            }
+
+            return inventoryIssueRepository.save(existing);
+        }).orElseThrow(() -> new IllegalArgumentException("Inventory Issue with ID " + id + " not found."));
+    }
+
+    public void deleteIssue(Long id) {
+        if (!inventoryIssueRepository.existsById(id)) {
+            throw new IllegalArgumentException("Inventory Issue with ID " + id + " not found.");
+        }
+        inventoryIssueRepository.deleteById(id);
+    }
+
     // Existing methods
     public List<InventoryIssue> getIssueHistoryByItemId(Long itemId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
@@ -47,8 +94,31 @@ public class InventoryIssueService {
 
     // NEW METHOD: Get issues by user ID (issued to user)
     public List<InventoryIssue> getIssuesByUserId(Long userId) {
-        return inventoryIssueRepository.findByIssuedToUserIdOrderByIssuedAtDesc(userId);
+    List<InventoryIssue> issues = inventoryIssueRepository.findByIssuedToUserIdOrderByIssuedAtDesc(userId);
+
+    // Force fetch nested lazy objects to avoid nulls in DTO
+    for (InventoryIssue issue : issues) {
+        if (issue.getIssuedItem() != null) {
+            issue.getIssuedItem().getItemName();  // access to force load
+            issue.getIssuedItem().getItemCode();
+        }
+        if (issue.getIssuedByUser() != null) {
+            issue.getIssuedByUser().getUsername();
+        }
+        if (issue.getIssuedToUser() != null) {
+            issue.getIssuedToUser().getUsername();
+        }
+        if (issue.getInventoryRequest() != null) {
+            issue.getInventoryRequest().getId();
+        }
+        if (issue.getRequestLineItem() != null) {
+            issue.getRequestLineItem().getRequestedQuantity();
+        }
     }
+
+    return issues;
+}
+
 
     // ALTERNATIVE METHOD: Get issues by user ID (issued by user)
     public List<InventoryIssue> getIssuesByIssuedByUserId(Long userId) {
