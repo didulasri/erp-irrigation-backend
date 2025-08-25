@@ -23,6 +23,7 @@ public class InventoryIssueResponseDTO {
     private Long issuedItemId;
     private String issuedItemCode;
     private String issuedItemName;
+    private String itemType;
 
     // User details
     private Long issuedByUserId;
