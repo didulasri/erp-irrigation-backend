@@ -4,6 +4,7 @@ import com.irrigation.erp.backend.dto.LoginRequest;
 import com.irrigation.erp.backend.dto.LoginResponse;
 import com.irrigation.erp.backend.dto.RoleResponseDTO;
 import com.irrigation.erp.backend.service.AuthService;
+import com.irrigation.erp.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
@@ -44,9 +48,23 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<LoginResponse> logout() {
-        // For now, just return success
-        // Later you can implement JWT token invalidation here
+        // For JWT, you can implement token blacklisting here if needed
         return ResponseEntity.ok(new LoginResponse("Logout successful", true));
+    }
+
+    @GetMapping("/validate-token")
+    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                String email = jwtUtil.getEmailFromToken(token);
+                boolean isValid = jwtUtil.validateToken(token, email);
+                return ResponseEntity.ok(isValid);
+            }
+            return ResponseEntity.ok(false);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
     }
 
     @GetMapping("/check-password-change/{email}")
@@ -60,6 +78,5 @@ public class AuthController {
         List<RoleResponseDTO> roles = authService.getAllRoles();
         return ResponseEntity.ok(roles);
     }
-
-
 }
+
