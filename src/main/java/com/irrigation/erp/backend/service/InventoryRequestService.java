@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -259,5 +260,23 @@ public class InventoryRequestService {
 
         inventoryRequestRepository.save(parentRequest);
 
+    }
+
+    public List<MaterialDistributionTableDTO> getMaterialDistributionTable(Long userId) {
+        LocalDate now = LocalDate.now();
+        int currentMonth = now.getMonthValue();
+        int currentYear = now.getYear();
+
+        // Calculate previous month
+        int previousMonth = currentMonth == 1 ? 12 : currentMonth - 1;
+        int previousMonthYear = currentMonth == 1 ? currentYear - 1 : currentYear;
+
+        return inventoryIssueRepository.getMaterialDistributionTable(
+                userId,
+                currentMonth,
+                currentYear,
+                previousMonth,
+                previousMonthYear
+        );
     }
 }

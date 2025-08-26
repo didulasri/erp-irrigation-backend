@@ -142,4 +142,11 @@ public class InventoryRequestController {
         }
     }
 
+    @GetMapping("/material-distribution")
+    public ResponseEntity<List<MaterialDistributionTableDTO>> getMaterialDistributionTable(@RequestParam Long userId) {
+        List<MaterialDistributionTableDTO> distribution = inventoryRequestService.getMaterialDistributionTable(userId);
+        return ResponseEntity.ok(distribution);
+    }
+
+
 }

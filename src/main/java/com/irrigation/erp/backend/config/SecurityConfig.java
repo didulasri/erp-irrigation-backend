@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/roles").permitAll()
                         .requestMatchers("/api/auth/check-password-change/**").permitAll()
                         .requestMatchers("/api/auth/validate-token").permitAll()
+                        .requestMatchers("/api/requests/material-distribution").permitAll()
 
                         // Protected endpoints - require authentication
                         .anyRequest().authenticated()
