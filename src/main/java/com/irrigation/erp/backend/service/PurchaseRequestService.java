@@ -41,7 +41,12 @@ public class PurchaseRequestService {
         purchaseRequest.setRefNo(requestDto.getRefNo());
 
         // Hardcoded user ID for now; replace with a proper authentication system later
-        purchaseRequest.setRequestedByUserId(1L);
+//        purchaseRequest.setRequestedByUserId(1L);
+//        purchaseRequest.setRequestedAt(LocalDateTime.now());
+
+        // Get the user ID from the DTO instead of hardcoding it
+        purchaseRequest.setRequestedByUserId(requestDto.getRequestedByUserId());
+
         purchaseRequest.setRequestedAt(LocalDateTime.now());
 
         // Map DTO line items to entity line items
@@ -58,10 +63,10 @@ public class PurchaseRequestService {
 
         purchaseRequest.setItems(items);
 
-        // Calculate total value
         BigDecimal totalValue = items.stream()
-                .map(item -> item.getEstimatedPrice().multiply(item.getQuantity()))
+                .map(PurchaseRequestLineItem::getEstimatedPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         purchaseRequest.setTotalValue(totalValue);
 
         // Apply business logic for status
