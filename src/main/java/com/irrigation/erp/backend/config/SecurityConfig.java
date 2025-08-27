@@ -65,6 +65,7 @@ public class SecurityConfig {
                 "http://localhost:3000",  // React default
                 "http://localhost:5173",  // Vite default
                 "http://localhost:4200"   // Angular default
+                
         ));
 
         // Allow all HTTP methods
