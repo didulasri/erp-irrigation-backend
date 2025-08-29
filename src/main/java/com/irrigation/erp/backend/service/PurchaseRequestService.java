@@ -4,8 +4,10 @@ package com.irrigation.erp.backend.service;
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
+import com.irrigation.erp.backend.model.InventoryItem;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.model.PurchaseRequestLineItem;
+import com.irrigation.erp.backend.repository.InventoryItemRepository;
 import com.irrigation.erp.backend.repository.PurchaseRequestRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +23,13 @@ public class PurchaseRequestService {
 
 
     private final PurchaseRequestRepository purchaseRequestRepository;
+    private final InventoryItemRepository inventoryItemRepository;
     private static final BigDecimal DIRECT_PURCHASE_LIMIT = new BigDecimal("5000");
 
     @Autowired
-    public PurchaseRequestService(PurchaseRequestRepository purchaseRequestRepository) {
+    public PurchaseRequestService(PurchaseRequestRepository purchaseRequestRepository,InventoryItemRepository inventoryItemRepository) {
         this.purchaseRequestRepository = purchaseRequestRepository;
+        this.inventoryItemRepository = inventoryItemRepository;
     }
 
     @Transactional
@@ -40,20 +44,19 @@ public class PurchaseRequestService {
         purchaseRequest.setObject(requestDto.getObject());
         purchaseRequest.setRefNo(requestDto.getRefNo());
 
-        // Hardcoded user ID for now; replace with a proper authentication system later
-//        purchaseRequest.setRequestedByUserId(1L);
-//        purchaseRequest.setRequestedAt(LocalDateTime.now());
-
-        // Get the user ID from the DTO instead of hardcoding it
+        // Get the user ID from the DTO
         purchaseRequest.setRequestedByUserId(requestDto.getRequestedByUserId());
-
         purchaseRequest.setRequestedAt(LocalDateTime.now());
 
-        // Map DTO line items to entity line items
+        // Map DTO line items to entity line items and fetch the InventoryItem
         List<PurchaseRequestLineItem> items = requestDto.getItems().stream()
                 .map(itemDto -> {
+                    // Fetch the InventoryItem entity to establish the relationship
+                    InventoryItem inventoryItem = inventoryItemRepository.findById(itemDto.getInventoryRequestLineItemId())
+                            .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemDto.getInventoryRequestLineItemId() + " not found."));
+
                     PurchaseRequestLineItem item = new PurchaseRequestLineItem();
-                    item.setInventoryRequestLineItemId(itemDto.getInventoryRequestLineItemId());
+                    item.setInventoryRequestLineItemId(inventoryItem.getId()); // <-- Use the fetched entity
                     item.setItemName(itemDto.getItemName());
                     item.setQuantity(itemDto.getQuantity());
                     item.setEstimatedPrice(itemDto.getEstimatedPrice());
@@ -63,6 +66,17 @@ public class PurchaseRequestService {
 
         purchaseRequest.setItems(items);
 
+        // Update the pending status of the inventory items ---
+        for (PurchaseRequestLineItem lineItem : items) {
+            // Fetch the InventoryItem using the ID from the line item
+            inventoryItemRepository.findById(lineItem.getInventoryRequestLineItemId()).ifPresent(inventoryItem -> {
+                inventoryItem.setPendingPurchaseRequest(true);
+                inventoryItemRepository.save(inventoryItem);
+            });
+        }
+
+
+        // Calculate total value
         BigDecimal totalValue = items.stream()
                 .map(PurchaseRequestLineItem::getEstimatedPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -78,6 +92,7 @@ public class PurchaseRequestService {
 
         return purchaseRequestRepository.save(purchaseRequest);
     }
+
 
     @Transactional
     public PurchaseRequest approvePurchaseRequest(Long requestId) {

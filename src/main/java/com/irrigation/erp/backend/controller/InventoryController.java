@@ -135,11 +135,8 @@ public class InventoryController {
     @GetMapping("/category/{categoryName}")
     public ResponseEntity<List<InventoryItemResponseDTO>> getInventoryItemsByCategory(@PathVariable String categoryName) {
         try {
-            List<InventoryItem> items = inventoryService.getInventoryItemsByCategory(categoryName);
-            List<InventoryItemResponseDTO> dtos = items.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
+            List<InventoryItemResponseDTO> items = inventoryService.getInventoryItemsByCategory(categoryName);
+            return ResponseEntity.ok(items);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -163,11 +160,9 @@ public class InventoryController {
     @GetMapping("/category/{categoryName}/low-stock")
     public ResponseEntity<List<InventoryItemResponseDTO>> getLowStockItemsByCategory(@PathVariable String categoryName) {
         try {
-            List<InventoryItem> items = inventoryService.getLowStockItemsByCategory(categoryName);
-            List<InventoryItemResponseDTO> dtos = items.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
+            List<InventoryItemResponseDTO> items = inventoryService.getLowStockItemsByCategory(categoryName);
+
+            return ResponseEntity.ok(items);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -195,6 +190,7 @@ public class InventoryController {
     public ResponseEntity<Void> deactivateInventoryItem(@PathVariable String itemCode, @RequestParam Long updatingUserId) {
         try {
             // Find the item by code
+
             InventoryItem itemToDeactivate = inventoryService.getInventoryItemByItemCode(itemCode)
                     .orElseThrow(() -> new IllegalArgumentException("Inventory item with code '" + itemCode + "' not found."));
 

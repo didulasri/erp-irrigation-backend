@@ -5,8 +5,7 @@ import com.irrigation.erp.backend.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import org.hibernate.annotations.SecondaryRow;
-import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -62,6 +61,7 @@ public class InventoryItem {
     @JoinColumn(name = "created_by_user_id", nullable = false, updatable = false)
     private User creatingUser;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_updated_by_user_id")
     private User lastUpdatedByUser;
@@ -69,14 +69,29 @@ public class InventoryItem {
     @Column(name = "last_updated_at")
     private LocalDateTime lastUpdatedAt;
 
+
+
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+
+    private Boolean pendingPurchaseRequest;
+
+
+
+
 
 
     @Transient
     private StockStatus stockStatus;
 
+
+
     public StockStatus getStockStatus() {
+        if (this.currentStockQuantity == null || this.minimumStockLevel == null) {
+            return null;
+        }
 
             if (this.currentStockQuantity.compareTo(BigDecimal.ZERO) <= 0) {
                 return StockStatus.OUT_OF_STOCK;
