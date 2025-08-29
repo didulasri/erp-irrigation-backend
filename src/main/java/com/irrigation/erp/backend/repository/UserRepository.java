@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByEmail(String email);
   // Find active users only
-  List<User> findByIsActiveTrue();
+  List<User> findAll();
 
   // Search by first name or last name containing the search term (case insensitive) for active users only
   @Query("SELECT u FROM User u WHERE u.isActive = true AND " +

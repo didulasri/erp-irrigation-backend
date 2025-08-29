@@ -16,7 +16,7 @@ public class UserService {
     private UserRepository userRepository;
 
     public List<UserDto> getAllUsers() {
-        List<User> users = userRepository.findByIsActiveTrue(); // Only get active users
+        List<User> users = userRepository.findAll(); // Only get active users
         return users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());

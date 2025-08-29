@@ -25,7 +25,7 @@ public class InventoryItem {
     @Column(nullable = false, unique = true)
     private String itemCode;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String itemName;
 
     @Column(columnDefinition = "TEXT")

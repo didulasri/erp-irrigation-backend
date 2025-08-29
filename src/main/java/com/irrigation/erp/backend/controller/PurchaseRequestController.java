@@ -48,7 +48,7 @@ public class PurchaseRequestController {
         }
     }
 
-    @GetMapping("/purchase-requests")
+    @GetMapping("/get-purchase-requests")
     public ResponseEntity<List<PurchaseResponseDTO>> getAllPurchaseRequests() {
         try {
             List<PurchaseResponseDTO> requests = purchaseRequestService.getAllPurchaseRequests();
