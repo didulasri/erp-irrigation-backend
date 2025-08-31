@@ -8,6 +8,7 @@ import com.irrigation.erp.backend.model.Role;
 import com.irrigation.erp.backend.model.User;
 import com.irrigation.erp.backend.repository.RoleRepository;
 import com.irrigation.erp.backend.repository.UserRepository;
+import com.irrigation.erp.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class AuthService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public LoginResponse authenticateUser(LoginRequest loginRequest) {
         try {
@@ -54,10 +58,23 @@ public class AuthService {
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
+            // Generate JWT token
+            String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
+            String token = jwtUtil.generateToken(
+                    user.getEmail(),
+                    user.getUsername(),
+                    roleName,
+                    user.getId()
+            );
+
             // Convert to DTO (excluding sensitive information)
             UserDto userDto = convertToDto(user);
 
-            return new LoginResponse("Login successful", true, userDto);
+            // Create response with token
+            LoginResponse response = new LoginResponse("Login successful", true, userDto);
+            response.setToken(token);
+
+            return response;
 
         } catch (Exception e) {
             return new LoginResponse("Login failed: " + e.getMessage(), false);
@@ -101,5 +118,4 @@ public class AuthService {
         dto.setName(role.getName());
         return dto;
     }
-
 }

@@ -1,6 +1,7 @@
 package com.irrigation.erp.backend.controller;
 
 import com.irrigation.erp.backend.dto.UserDto;
+import com.irrigation.erp.backend.dto.UserStatusDTO;
 import com.irrigation.erp.backend.model.User;
 import com.irrigation.erp.backend.model.Role;
 import com.irrigation.erp.backend.service.UserService;
@@ -72,6 +73,22 @@ public class UserController {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    // toggle status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<UserDto> updateUserStatus(
+            @PathVariable Long id,
+            @RequestBody UserStatusDTO  statusDTO) {
+
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setIsActive(statusDTO.getIsActive());
+                    userRepository.save(user);
+                    return ResponseEntity.ok(UserDto.fromEntity(user));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(
