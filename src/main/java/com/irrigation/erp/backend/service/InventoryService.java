@@ -1,6 +1,7 @@
 package com.irrigation.erp.backend.service;
 
 import com.irrigation.erp.backend.dto.InventoryItemCreateRequestDTO;
+import com.irrigation.erp.backend.dto.InventoryItemResponseDTO;
 import com.irrigation.erp.backend.enums.StockStatus;
 import com.irrigation.erp.backend.model.InventoryItem;
 import com.irrigation.erp.backend.model.ItemCategory;
@@ -136,10 +137,54 @@ public class InventoryService {
     }
 
     // NEW METHOD: Get inventory items by category name
-    public List<InventoryItem> getInventoryItemsByCategory(String categoryName) {
-        ItemCategory category = itemCategoryRepository.findByName(categoryName)
-                .orElseThrow(() -> new IllegalArgumentException("Item Category '" + categoryName + "' not found."));
-        return inventoryItemRepository.findByItemCategory(category);
+    public List<InventoryItemResponseDTO> getInventoryItemsByCategory(String categoryName) {
+        return inventoryItemRepository.findByItemCategory(
+                        itemCategoryRepository.findByName(categoryName)
+                                .orElseThrow(() -> new IllegalArgumentException("Item Category '" + categoryName + "' not found."))
+                )
+                .stream()
+                .map(this::mapToDTO) // Map each entity to the DTO
+                .collect(Collectors.toList());
+    }
+
+    // Helper method to map entity to DTO
+    private InventoryItemResponseDTO mapToDTO(InventoryItem item) {
+        InventoryItemResponseDTO dto = new InventoryItemResponseDTO();
+        dto.setId(item.getId());
+        dto.setItemCode(item.getItemCode());
+        dto.setItemName(item.getItemName());
+        dto.setItemDescription(item.getItemDescription());
+        dto.setUnitOfMeasurement(item.getUnitOfMeasurement());
+        dto.setCurrentStockQuantity(item.getCurrentStockQuantity());
+        dto.setMinimumStockLevel(item.getMinimumStockLevel());
+        dto.setLocationInStore(item.getLocationInStore());
+        dto.setUnitPrice(item.getUnitPrice());
+        dto.setIsActive(item.getIsActive());
+        dto.setStockStatus(item.getStockStatus());
+
+        // Set the new field
+        dto.setPendingPurchaseRequest(item.getPendingPurchaseRequest());
+
+        // Map related entity fields
+        if (item.getItemCategory() != null) {
+            dto.setItemCategoryId(item.getItemCategory().getId());
+            dto.setItemCategoryName(item.getItemCategory().getName());
+        }
+        if (item.getItemType() != null) {
+            dto.setItemTypeId(item.getItemType().getId());
+            dto.setItemTypeName(item.getItemType().getName());
+        }
+        if (item.getCreatingUser() != null) {
+            dto.setCreatedByUserId(item.getCreatingUser().getId());
+            dto.setCreatedByUsername(item.getCreatingUser().getUsername());
+        }
+        if (item.getLastUpdatedByUser() != null) {
+            dto.setLastUpdatedByUserId(item.getLastUpdatedByUser().getId());
+            dto.setLastUpdatedByUsername(item.getLastUpdatedByUser().getUsername());
+        }
+        dto.setLastUpdatedAt(item.getLastUpdatedAt());
+
+        return dto;
     }
 
     // NEW METHOD: Get inventory items by category ID
@@ -161,12 +206,12 @@ public class InventoryService {
     }
 
     // NEW METHOD: Get low stock items by category
-    public List<InventoryItem> getLowStockItemsByCategory(String categoryName) {
+    public List<InventoryItemResponseDTO> getLowStockItemsByCategory(String categoryName) {
+        // Now calling the method that returns DTOs and filtering that result
         return getInventoryItemsByCategory(categoryName).stream()
                 .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
                 .collect(Collectors.toList());
     }
-
     @Transactional
     public InventoryItem adjustStock(Long itemId, @NotNull(message = "Quantity change cannot be null") BigDecimal quantityChange, Long adjustingUserId, String reason) {
         InventoryItem item = inventoryItemRepository.findById(itemId)

@@ -34,6 +34,7 @@ public class InventoryItemResponseDTO {
     private LocalDateTime lastUpdatedAt;
     private Boolean isActive;
     private StockStatus stockStatus;
+    private Boolean pendingPurchaseRequest;
 
 
 

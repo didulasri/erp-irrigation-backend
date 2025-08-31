@@ -13,19 +13,22 @@ import java.util.List;
 @Getter
 @Setter
 public class PurchaseRequestCreateDTO {
+    @NotNull(message = "Requested by user ID cannot be null")
+    private Long requestedByUserId;
+
     @NotBlank(message = "Division cannot be empty")
     private String division;
 
     @NotBlank(message = "Sub-division cannot be empty")
     private String subDivision;
 
-    @NotBlank(message = "Programme cannot be empty")
+
     private String programme;
 
-    @NotBlank(message = "Project cannot be empty")
+
     private String project;
 
-    @NotBlank(message = "Object cannot be empty")
+
     private String object;
 
     private String refNo;

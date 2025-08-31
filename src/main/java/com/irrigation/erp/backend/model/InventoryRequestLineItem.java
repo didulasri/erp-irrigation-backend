@@ -34,4 +34,6 @@ public class InventoryRequestLineItem {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RequestLineItemStatus status;
+
+
 }
