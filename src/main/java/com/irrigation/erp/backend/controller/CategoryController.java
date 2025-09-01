@@ -42,4 +42,10 @@ public class CategoryController {
         ItemCategory category = categoryService.getCategoryByName(categoryName);
         return ResponseEntity.ok(category);
     }
+
+    @PostMapping("/add")
+    public ResponseEntity<ItemCategory> addCategory(@RequestBody ItemCategory category) {
+        ItemCategory savedCategory = categoryService.addCategory(category);
+        return ResponseEntity.ok(savedCategory);
+    }
 }

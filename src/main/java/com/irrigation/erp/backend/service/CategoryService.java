@@ -36,6 +36,23 @@ public class CategoryService {
         return itemCategoryRepository.findByName(categoryName)
                 .orElseThrow(() -> new IllegalArgumentException("Category with name '" + categoryName + "' not found"));
     }
+    // ✅ Add new category with createdBy
+    public ItemCategory addCategory(ItemCategory category) {
+    if (category.getCreatedBy() == null || category.getCreatedBy().isBlank()) {
+        throw new IllegalArgumentException("createdBy cannot be null or empty");
+    }
+    return itemCategoryRepository.save(category);
+}
+
+    // ✅ Update category
+    public ItemCategory updateCategory(Long categoryId, String name, String description, String updatedBy) {
+        ItemCategory category = getCategoryById(categoryId);
+        category.setName(name);
+        category.setDescription(description);
+        category.setCreatedBy(updatedBy); // 👈 optional: track who last updated
+        return itemCategoryRepository.save(category);
+    }
+
 
     public List<CategoryWithCountDTO> getAllCategoriesWithCounts() {
         List<ItemCategory> categories = itemCategoryRepository.findAll();
