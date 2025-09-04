@@ -1,9 +1,11 @@
 package com.irrigation.erp.backend.controller;
 
 
+import com.irrigation.erp.backend.dto.CreateGrnRequest;
 import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
 import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
+import com.irrigation.erp.backend.model.GRN;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import com.irrigation.erp.backend.service.PurchaseRequestService;
 import jakarta.validation.Valid;
@@ -67,6 +69,15 @@ public class PurchaseRequestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+            @PostMapping("/{purchaseRequestId}/grn")
+            public ResponseEntity<Long> createGrn(
+                    @PathVariable Long purchaseRequestId,
+                    @Valid @RequestBody CreateGrnRequest body
+            ) {
+                GRN saved = purchaseRequestService.createGoodsReceivingNote(purchaseRequestId, body);
+                return ResponseEntity.ok(saved.getId()); // or return a response DTO
+            }
 
 }
 

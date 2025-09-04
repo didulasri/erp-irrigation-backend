@@ -20,4 +20,8 @@ public class PurchaseResponseDTO {
 
     private String itemName;
     private PurchaseRequest.Status status;
+
+
+    //Newly added
+    private String project;
 }

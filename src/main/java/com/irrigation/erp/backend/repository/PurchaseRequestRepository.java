@@ -19,12 +19,13 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
                COALESCE(u.lastName, '')),
         pr.requestedAt,
         CAST(function('string_agg', item.itemName, ', ') AS string),
-        pr.status
+        pr.status,
+        pr.project
     )
     FROM PurchaseRequest pr
     JOIN pr.items item
     JOIN User u ON u.id = pr.requestedByUserId
-    GROUP BY pr.id, pr.requestedAt, u.firstName, u.lastName, pr.status
+    GROUP BY pr.id, pr.requestedAt, u.firstName, u.lastName, pr.status,pr.project
 """)
     List<PurchaseResponseDTO> findAllPurchaseRequestsWithItemNames();
 
