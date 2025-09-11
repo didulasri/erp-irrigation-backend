@@ -8,7 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,7 +32,7 @@ public class GRN {
 
     private String referenceOrderNo;
 
-    private Instant referenceOrderDate;
+    private LocalDate referenceOrderDate;
 
     private String issuingOfficer;
 
@@ -50,7 +52,7 @@ public class GRN {
 
 
     @OneToMany(mappedBy = "grn", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GoodsReceivingItem> items;
+    private List<GoodsReceivingItem> items = new ArrayList<>(); // Initialize the list here
 
     @PrePersist
     public void onCreate() {

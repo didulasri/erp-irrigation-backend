@@ -25,7 +25,7 @@ public class PurchaseRequestService {
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final InventoryItemRepository inventoryItemRepository;
     private final InventoryRequestLineItemRepository inventoryRequestLineItemRepository;
-    private final GoodsReceivingNoteRepository goodsReceivingNoteRepository;
+//    private final GoodsReceivingNoteRepository goodsReceivingNoteRepository;
 
     private static final BigDecimal DIRECT_PURCHASE_LIMIT = new BigDecimal("5000");
 
@@ -39,7 +39,7 @@ public class PurchaseRequestService {
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.inventoryItemRepository = inventoryItemRepository;
         this.inventoryRequestLineItemRepository = inventoryRequestLineItemRepository;
-        this.goodsReceivingNoteRepository = goodsReceivingNoteRepository;
+//        this.goodsReceivingNoteRepository = goodsReceivingNoteRepository;
     }
 
     @Transactional
@@ -158,47 +158,47 @@ public class PurchaseRequestService {
         );
     }
 
-    @Transactional
-    public GRN createGoodsReceivingNote(Long purchaseRequestId,
-                                        CreateGrnRequest dto) {
-
-        PurchaseRequest pr = purchaseRequestRepository.findById(purchaseRequestId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Purchase request with ID " + purchaseRequestId + " not found."));
-
-        if (goodsReceivingNoteRepository.existsByReceiptNo(dto.getReceiptNo())) {
-            throw new IllegalArgumentException("Receipt No already exists: " + dto.getReceiptNo());
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new SecurityException("User must be authenticated to create GRN");
-        }
-        User currentUser = (User) authentication.getPrincipal();
-
-        GRN grn = new GRN();
-        grn.setReceiptNo(dto.getReceiptNo());
-        grn.setReceivingStation(dto.getReceivingStation());
-        grn.setReferenceOrderNo(dto.getReferenceOrderNo());
-        grn.setReferenceOrderDate(dto.getReferenceOrderDate());
-        grn.setIssuingOfficer(dto.getIssuingOfficer());
-        grn.setStation(dto.getStation());
-        grn.setCreatedBy(currentUser);
-        grn.setPurchaseRequest(pr);
-        grn.setItems(new ArrayList<>());
-
-
-        for (GRNItemDTO row : dto.getItems()) {
-            GoodsReceivingItem item = new GoodsReceivingItem();
-            item.setDescription(row.getDescription());
-            item.setQuantity(row.getQuantity());
-            item.setUnit(row.getUnit());
-            item.setGrn(grn);
-            grn.addItem(item);
-        }
-
-
-        return goodsReceivingNoteRepository.save(grn);
-    }
+//   @Transactional
+//    public GRN createGoodsReceivingNote(Long id,
+//                                        CreateGrnRequest dto) {
+//
+//        PurchaseRequest pr = purchaseRequestRepository.findById(id)
+//                .orElseThrow(() -> new IllegalArgumentException(
+//                        "Purchase request with ID " + id + " not found."));
+//
+//        if (goodsReceivingNoteRepository.existsByReceiptNo(dto.getReceiptNo())) {
+//            throw new IllegalArgumentException("Receipt No already exists: " + dto.getReceiptNo());
+//        }
+//
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new SecurityException("User must be authenticated to create GRN");
+//        }
+//        User currentUser = (User) authentication.getPrincipal();
+//
+//        GRN grn = new GRN();
+//        grn.setReceiptNo(dto.getReceiptNo());
+//        grn.setReceivingStation(dto.getReceivingStation());
+//        grn.setReferenceOrderNo(dto.getReferenceOrderNo());
+//        grn.setReferenceOrderDate(dto.getReferenceOrderDate());
+//        grn.setIssuingOfficer(dto.getIssuingOfficer());
+//        grn.setStation(dto.getStation());
+//        grn.setCreatedBy(currentUser);
+//        grn.setPurchaseRequest(pr);
+//        grn.setItems(new ArrayList<>());
+//
+//
+//        for (GRNItemDTO row : dto.getItems()) {
+//            GoodsReceivingItem item = new GoodsReceivingItem();
+//            item.setDescription(row.getDescription());
+//            item.setQuantity(row.getQuantity());
+//            item.setUnit(row.getUnit());
+//            item.setGrn(grn);
+//            grn.addItem(item);
+//        }
+//
+//
+//        return goodsReceivingNoteRepository.save(grn);
+//    }
 
 }

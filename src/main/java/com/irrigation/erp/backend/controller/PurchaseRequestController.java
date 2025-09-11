@@ -70,14 +70,14 @@ public class PurchaseRequestController {
         }
     }
 
-            @PostMapping("/{purchaseRequestId}/grn")
-            public ResponseEntity<Long> createGrn(
-                    @PathVariable Long purchaseRequestId,
-                    @Valid @RequestBody CreateGrnRequest body
-            ) {
-                GRN saved = purchaseRequestService.createGoodsReceivingNote(purchaseRequestId, body);
-                return ResponseEntity.ok(saved.getId()); // or return a response DTO
-            }
+//            @PostMapping("/{id}/grn")
+//            public ResponseEntity<Long> createGrn(
+//                    @PathVariable Long id,
+//                    @Valid @RequestBody CreateGrnRequest body
+//            ) {
+//                GRN saved = purchaseRequestService.createGoodsReceivingNote(id, body);
+//                return ResponseEntity.ok(saved.getId()); // or return a response DTO
+//            }
 
 }
 

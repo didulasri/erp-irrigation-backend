@@ -24,7 +24,7 @@ public class CreateGrnRequest {
 
     private String referenceOrderNo;
 
-    private Instant referenceOrderDate;
+    private LocalDate referenceOrderDate;
 
 
     private String issuingOfficer;
@@ -32,7 +32,7 @@ public class CreateGrnRequest {
 
     private String station;
 
-    private User createdBy;
+    private Long createdBy;
 
 
     @Valid
