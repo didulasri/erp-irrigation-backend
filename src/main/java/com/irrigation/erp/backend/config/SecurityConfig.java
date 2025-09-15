@@ -4,6 +4,7 @@ import com.irrigation.erp.backend.filter.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -33,14 +34,20 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions, use JWT
                 )
+
                 .authorizeHttpRequests(authorize -> authorize
                         // Public endpoints - no authentication required
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/roles").permitAll()
                         .requestMatchers("/api/auth/check-password-change/**").permitAll()
                         .requestMatchers("/api/auth/validate-token").permitAll()
                         .requestMatchers("/api/requests/material-distribution").permitAll()
+
+
+//                        .requestMatchers("/api/grn/**").hasAnyRole("STOCK_KEEPER","ADMIN")
+
 
                         // Protected endpoints - require authentication
                         .anyRequest().authenticated()
@@ -65,7 +72,7 @@ public class SecurityConfig {
                 "http://localhost:3000",  // React default
                 "http://localhost:5173",  // Vite default
                 "http://localhost:4200"   // Angular default
-                
+
         ));
 
         // Allow all HTTP methods
@@ -86,3 +93,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

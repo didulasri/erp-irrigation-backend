@@ -1,21 +1,21 @@
 package com.irrigation.erp.backend.service;
 
-import com.irrigation.erp.backend.dto.PurchaseRequestCreateDTO;
-import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
-import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
-import com.irrigation.erp.backend.model.InventoryItem;
-import com.irrigation.erp.backend.model.InventoryRequestLineItem; // ⬅ add this model
-import com.irrigation.erp.backend.model.PurchaseRequest;
-import com.irrigation.erp.backend.model.PurchaseRequestLineItem;
+import com.irrigation.erp.backend.dto.*;
+import com.irrigation.erp.backend.model.*;
+import com.irrigation.erp.backend.repository.GoodsReceivingNoteRepository;
 import com.irrigation.erp.backend.repository.InventoryItemRepository;
 import com.irrigation.erp.backend.repository.InventoryRequestLineItemRepository; // ⬅ add this repo
 import com.irrigation.erp.backend.repository.PurchaseRequestRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +24,8 @@ public class PurchaseRequestService {
 
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final InventoryItemRepository inventoryItemRepository;
-    private final InventoryRequestLineItemRepository inventoryRequestLineItemRepository; // ⬅ new
+    private final InventoryRequestLineItemRepository inventoryRequestLineItemRepository;
+//    private final GoodsReceivingNoteRepository goodsReceivingNoteRepository;
 
     private static final BigDecimal DIRECT_PURCHASE_LIMIT = new BigDecimal("5000");
 
@@ -32,11 +33,13 @@ public class PurchaseRequestService {
     public PurchaseRequestService(
             PurchaseRequestRepository purchaseRequestRepository,
             InventoryItemRepository inventoryItemRepository,
-            InventoryRequestLineItemRepository inventoryRequestLineItemRepository // ⬅ new
+            InventoryRequestLineItemRepository inventoryRequestLineItemRepository,
+            GoodsReceivingNoteRepository goodsReceivingNoteRepository
     ) {
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.inventoryItemRepository = inventoryItemRepository;
-        this.inventoryRequestLineItemRepository = inventoryRequestLineItemRepository; // ⬅ new
+        this.inventoryRequestLineItemRepository = inventoryRequestLineItemRepository;
+//        this.goodsReceivingNoteRepository = goodsReceivingNoteRepository;
     }
 
     @Transactional
@@ -56,7 +59,7 @@ public class PurchaseRequestService {
         // Build line items from **REQUEST LINE ITEM ID** (not inventory item id)
         List<PurchaseRequestLineItem> items = requestDto.getItems().stream()
                 .map(itemDto -> {
-                    // ⬇️ CHANGED: look up the request line item using the id the client sends
+
                     InventoryRequestLineItem reqLine = inventoryRequestLineItemRepository
                             .findById(itemDto.getInventoryRequestLineItemId())
                             .orElseThrow(() -> new IllegalArgumentException(
@@ -154,4 +157,48 @@ public class PurchaseRequestService {
                         .collect(Collectors.toList())
         );
     }
+
+//   @Transactional
+//    public GRN createGoodsReceivingNote(Long id,
+//                                        CreateGrnRequest dto) {
+//
+//        PurchaseRequest pr = purchaseRequestRepository.findById(id)
+//                .orElseThrow(() -> new IllegalArgumentException(
+//                        "Purchase request with ID " + id + " not found."));
+//
+//        if (goodsReceivingNoteRepository.existsByReceiptNo(dto.getReceiptNo())) {
+//            throw new IllegalArgumentException("Receipt No already exists: " + dto.getReceiptNo());
+//        }
+//
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new SecurityException("User must be authenticated to create GRN");
+//        }
+//        User currentUser = (User) authentication.getPrincipal();
+//
+//        GRN grn = new GRN();
+//        grn.setReceiptNo(dto.getReceiptNo());
+//        grn.setReceivingStation(dto.getReceivingStation());
+//        grn.setReferenceOrderNo(dto.getReferenceOrderNo());
+//        grn.setReferenceOrderDate(dto.getReferenceOrderDate());
+//        grn.setIssuingOfficer(dto.getIssuingOfficer());
+//        grn.setStation(dto.getStation());
+//        grn.setCreatedBy(currentUser);
+//        grn.setPurchaseRequest(pr);
+//        grn.setItems(new ArrayList<>());
+//
+//
+//        for (GRNItemDTO row : dto.getItems()) {
+//            GoodsReceivingItem item = new GoodsReceivingItem();
+//            item.setDescription(row.getDescription());
+//            item.setQuantity(row.getQuantity());
+//            item.setUnit(row.getUnit());
+//            item.setGrn(grn);
+//            grn.addItem(item);
+//        }
+//
+//
+//        return goodsReceivingNoteRepository.save(grn);
+//    }
+
 }
