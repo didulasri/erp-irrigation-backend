@@ -14,8 +14,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.ArrayList;
+
 import java.util.List;
 
 @Service
@@ -70,12 +69,19 @@ public class GrnService {
         // Save the GRN
         return grnRepository.save(grn);
     }
-    public GrnCheckResponseDTO checkExistingGrn(Long purchaseRequestId) {
-        // Find GRN by purchaseRequestId using the repository
+
+
+
+    public GrnCheckResponseDTO checkExistingGrn(Long purchaseRequestId, Long userId) {
+        // Find GRNs by purchaseRequestId using the repository
         List<GRN> grns = grnRepository.findByPurchaseRequestId(purchaseRequestId);
 
-        if (!grns.isEmpty()) {
+        // Filter by the userId (only GRNs created by this user)
+        grns = grns.stream()
+                .filter(grn -> grn.getCreatedBy() != null && grn.getCreatedBy().getId().equals(userId))
+                .toList();
 
+        if (!grns.isEmpty()) {
             GRN grn = grns.get(0);
 
             // Prepare the CreateGrnRequest details
@@ -94,6 +100,9 @@ public class GrnService {
         // If no GRN found, return response indicating GRN doesn't exist
         return new GrnCheckResponseDTO(false, null);
     }
+
+
+
 
 
 

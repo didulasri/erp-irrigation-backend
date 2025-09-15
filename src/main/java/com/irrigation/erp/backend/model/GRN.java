@@ -52,7 +52,7 @@ public class GRN {
 
 
     @OneToMany(mappedBy = "grn", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GoodsReceivingItem> items = new ArrayList<>(); // Initialize the list here
+    private List<GoodsReceivingItem> items = new ArrayList<>();
 
     @PrePersist
     public void onCreate() {

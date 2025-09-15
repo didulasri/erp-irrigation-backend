@@ -32,27 +32,28 @@ public class GrnController {
             @Valid @RequestBody CreateGrnRequest body,
             Authentication authentication
     ) {
-        // Extract userId from authentication (assuming it is stored as 'subject' in JWT)
-        final Long userId = body.getCreatedBy();  // Or use authentication.getPrincipal() depending on the setup
 
-        // You can also log or check the extracted userId to verify
+        final Long userId = body.getCreatedBy();
+
+
         System.out.println("Authenticated user ID: " + userId);
 
-        // Call the service with the userId
+
         GRN saved = grnService.createGrn(purchaseRequestId, body, userId);
 
-        // Return the saved GRN's ID
+
         return new ResponseEntity<>(saved.getId(), HttpStatus.CREATED);
     }
 
 
     @GetMapping("/check/{purchaseRequestId}")
-    public ResponseEntity<GrnCheckResponseDTO> checkGrn(@PathVariable Long purchaseRequestId) {
-        GrnCheckResponseDTO response = grnService.checkExistingGrn(purchaseRequestId);
+    public ResponseEntity<GrnCheckResponseDTO> checkGrn(@PathVariable Long purchaseRequestId,@RequestParam Long userId
+
+
+    ) {
+        GrnCheckResponseDTO response = grnService.checkExistingGrn(purchaseRequestId, userId);
         return ResponseEntity.ok(response);
     }
-
-
 
 
 
