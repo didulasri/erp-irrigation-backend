@@ -25,6 +25,8 @@ public class InventoryController {
     public InventoryController(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
     }
+    public static final String ITEM_NOT_FOUND = "' not found.";
+    public static final String INVENTORY_ITEM_WITH_CODE = "Inventory item with code";
 
     private InventoryItemResponseDTO convertToDto(InventoryItem inventoryItem) {
         InventoryItemResponseDTO dto = new InventoryItemResponseDTO();
@@ -110,7 +112,7 @@ public class InventoryController {
         try {
             InventoryItem adjustedItem = inventoryService.adjustStock(
                     inventoryService.getInventoryItemByItemCode(itemCode)
-                            .orElseThrow(() -> new IllegalArgumentException("Inventory item with code '" + itemCode + "' not found."))
+                            .orElseThrow(() -> new IllegalArgumentException(INVENTORY_ITEM_WITH_CODE  + itemCode + ITEM_NOT_FOUND))
                             .getId(),
                     requestDTO.getQuantityChange(),
                     requestDTO.getAdjustingUserId(),
@@ -131,7 +133,7 @@ public class InventoryController {
         return ResponseEntity.ok(dtos);
     }
 
-    // NEW ENDPOINT: Get inventory items by category name
+
     @GetMapping("/category/{categoryName}")
     public ResponseEntity<List<InventoryItemResponseDTO>> getInventoryItemsByCategory(@PathVariable String categoryName) {
         try {
@@ -142,7 +144,7 @@ public class InventoryController {
         }
     }
 
-    // NEW ENDPOINT: Get inventory items by category ID
+    //.Get inventory items by category ID
     @GetMapping("/category-id/{categoryId}")
     public ResponseEntity<List<InventoryItemResponseDTO>> getInventoryItemsByCategoryId(@PathVariable Long categoryId) {
         try {
@@ -156,7 +158,7 @@ public class InventoryController {
         }
     }
 
-    // NEW ENDPOINT: Get low stock items by category
+
     @GetMapping("/category/{categoryName}/low-stock")
     public ResponseEntity<List<InventoryItemResponseDTO>> getLowStockItemsByCategory(@PathVariable String categoryName) {
         try {
@@ -173,7 +175,7 @@ public class InventoryController {
         return inventoryService.getInventoryItemByItemCode(itemCode)
                 .map(this::convertToDto)
                 .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory item with code '" + itemCode + "' not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, INVENTORY_ITEM_WITH_CODE  + itemCode + ITEM_NOT_FOUND));
     }
 
     @GetMapping("/low-stock")
@@ -192,7 +194,11 @@ public class InventoryController {
             // Find the item by code
 
             InventoryItem itemToDeactivate = inventoryService.getInventoryItemByItemCode(itemCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Inventory item with code '" + itemCode + "' not found."));
+                    .orElseThrow(() -> new IllegalArgumentException(INVENTORY_ITEM_WITH_CODE  + itemCode + ITEM_NOT_FOUND));
+
+            System.out.println("Deactivating item: " + itemToDeactivate);
+
+
 
             // Call the update service method to set isActive to false
             inventoryService.updateInventoryItem(
