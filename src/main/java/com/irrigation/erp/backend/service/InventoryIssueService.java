@@ -163,11 +163,11 @@ public class InventoryIssueService {
                 InventoryIssue firstIssue = issuesGroup.get(0);
 
                 // Create distribution record
-                OtherDistributionsResponseDTO.DistributionRecord record =
+                OtherDistributionsResponseDTO.DistributionRecord recorder =
                         new OtherDistributionsResponseDTO.DistributionRecord();
 
-                record.setDate(firstIssue.getIssuedAt().toLocalDate());
-                record.setIssueNumber("REQ-" + firstIssue.getInventoryRequest().getId());
+                recorder.setDate(firstIssue.getIssuedAt().toLocalDate());
+                recorder.setIssueNumber("REQ-" + firstIssue.getInventoryRequest().getId());
 
                 // Create item quantities map
                 Map<String, Integer> itemQuantities = new HashMap<>();
@@ -185,8 +185,8 @@ public class InventoryIssueService {
                     itemQuantities.put(itemName, currentQuantity + issuedQuantity);
                 }
 
-                record.setItemQuantities(itemQuantities);
-                distributions.add(record);
+                recorder.setItemQuantities(itemQuantities);
+                distributions.add(recorder);
             }
         }
 
