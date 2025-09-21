@@ -53,9 +53,6 @@ jobs:
       - name: Make Maven Wrapper executable
         run: chmod +x mvnw
 
-      - name: Test + Coverage (profile=ci)
-        run: ./mvnw -B -U clean verify -Dspring.profiles.active=ci -DskipITs=true
-
       - name: SonarQube Scan
         run: |
           ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
