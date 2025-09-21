@@ -235,4 +235,29 @@ public class InventoryService {
 
         return inventoryItemRepository.save(item);
     }
+
+
+
+    public InventoryItem deactivateItem(String itemCode, Long updatingUserId) {
+        // Fetch item (404 if not found)
+        InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
+                .orElseThrow(() -> new IllegalArgumentException("Item with code '" + itemCode + "' not found."));
+
+        // Fetch user performing the action (404 if not found)
+        User updatingUser = userRepository.findById(updatingUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User with id '" + updatingUserId + "' not found."));
+
+        // Idempotent: only update if currently active
+        if (Boolean.TRUE.equals(item.getIsActive())) {
+            item.setIsActive(false);
+            item.setLastUpdatedByUser(updatingUser);
+            item.setLastUpdatedAt(LocalDateTime.now());
+            item = inventoryItemRepository.save(item);
+        }
+
+        return item;
+    }
 }
+
+
+
