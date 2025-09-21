@@ -89,7 +89,7 @@ public class InventoryRequestController {
         List<InventoryRequest> pendingRequests = inventoryRequestService.getAllPendingInventoryRequestsWithLineItems();
         List<InventoryRequestResponseDTO> dtos = pendingRequests.stream()
                 .map(this::convertToRequestDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -98,7 +98,7 @@ public class InventoryRequestController {
         List<InventoryRequest> issuedRequests = inventoryRequestService.getAllIssuedInventoryRequestsWithLineItems();
         List<InventoryRequestResponseDTO> dtos = issuedRequests.stream()
                 .map(this::convertToRequestDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(dtos);
     }
 

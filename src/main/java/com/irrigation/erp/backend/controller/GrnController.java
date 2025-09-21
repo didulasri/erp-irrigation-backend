@@ -35,13 +35,7 @@ public class GrnController {
 
         final Long userId = body.getCreatedBy();
 
-
-        System.out.println("Authenticated user ID: " + userId);
-
-
         GRN saved = grnService.createGrn(purchaseRequestId, body, userId);
-
-
         return new ResponseEntity<>(saved.getId(), HttpStatus.CREATED);
     }
 

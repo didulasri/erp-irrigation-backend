@@ -109,7 +109,7 @@ public class AuthService {
         List<Role> roles = roleRepository.findAll();
         return roles.stream()
                 .map(this::convertToRoleDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private RoleResponseDTO convertToRoleDto(Role role) {

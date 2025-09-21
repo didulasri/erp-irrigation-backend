@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
+
     @Autowired
     private UserRepository userRepository;
 
@@ -19,7 +20,7 @@ public class UserService {
         List<User> users = userRepository.findAll(); // Only get active users
         return users.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public UserDto getUserById(Long id) {
@@ -32,7 +33,7 @@ public class UserService {
         List<User> users = userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseAndIsActiveTrue(name, name);
         return users.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private UserDto convertToDto(User user) {

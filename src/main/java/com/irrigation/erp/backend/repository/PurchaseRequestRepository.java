@@ -1,7 +1,6 @@
 package com.irrigation.erp.backend.repository;
 
 import com.irrigation.erp.backend.dto.PurchaseResponseDTO;
-import com.irrigation.erp.backend.dto.PurchaseResponseFormDTO;
 import com.irrigation.erp.backend.model.PurchaseRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
