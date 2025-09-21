@@ -37,13 +37,14 @@ jobs:
       - name: Build (skip tests)
         run: ./mvnw -B -U clean package -DskipTests -DskipITs=true
 
-      # Run SonarQube scan (no coverage)
+      # Run SonarQube scan
       - name: SonarQube Scan
         run: |
-          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.2.0.4988:sonar \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
-            -Dsonar.login="${SONAR_TOKEN}" \
+            -Dsonar.token="${SONAR_TOKEN}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
             -Dsonar.projectName="ERP Backend" \
+            -Dsonar.sources=src/main/java \
             -Dsonar.java.binaries=target/classes \
             -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.md,**/*.yml,**/*.yaml,**/*.json
