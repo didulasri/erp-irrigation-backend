@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 @Service
 public class InventoryService {
@@ -30,6 +30,9 @@ public class InventoryService {
     private final UserRepository userRepository;
     public static final String NOT_FOUND = "' not found.";
     public static final String ITEM_CATEGORY = "Item Category '";
+    public static final String ITEM_WITH_CODE = "Item with code '";
+    public static final String USER_WITH_ID = "User with id '";
+
 
     public InventoryService(InventoryItemRepository inventoryItemRepository,
                             ItemCategoryRepository itemCategoryRepository,
@@ -46,7 +49,7 @@ public class InventoryService {
 
         //check for unique item code
         if(inventoryItemRepository.findByItemCode(requestDTO.getItemCode()).isPresent()){
-            throw new IllegalArgumentException("Item with code '" + requestDTO.getItemCode() + "' already exists.");
+            throw new IllegalArgumentException(ITEM_WITH_CODE  + requestDTO.getItemCode() + "' already exists.");
         }
 
         //fetch entities from repositories
@@ -57,7 +60,7 @@ public class InventoryService {
                 .orElseThrow(()-> new IllegalArgumentException("Item Type '" + requestDTO.getItemTypeName() + NOT_FOUND));
 
         User creatingUser = userRepository.findById(requestDTO.getCreatingUserId())
-                .orElseThrow(()-> new IllegalArgumentException("User with id '" + requestDTO.getCreatingUserId() + NOT_FOUND));
+                .orElseThrow(()-> new IllegalArgumentException(USER_WITH_ID + requestDTO.getCreatingUserId() + NOT_FOUND));
         // Changed from IllegalIdentifierException for consistency
 
         //Create and Populate New InventoryItem Object
@@ -94,7 +97,7 @@ public class InventoryService {
                                              Long updatingUserId){
 
         InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
-                .orElseThrow(()-> new IllegalArgumentException("Item with code '" + itemCode + NOT_FOUND));
+                .orElseThrow(()-> new IllegalArgumentException(ITEM_WITH_CODE  + itemCode + NOT_FOUND));
 
         if (itemName != null) item.setItemName(itemName);
         if (itemDescription != null) item.setItemDescription(itemDescription);
@@ -118,7 +121,7 @@ public class InventoryService {
 
         //update updatingUser fields
         User updatingUser = userRepository.findById(updatingUserId)
-                .orElseThrow(()-> new IllegalArgumentException("User with id '" + updatingUserId + NOT_FOUND));
+                .orElseThrow(()-> new IllegalArgumentException(USER_WITH_ID + updatingUserId + NOT_FOUND));
         // Changed from IllegalIdentifierException for consistency
         item.setLastUpdatedByUser(updatingUser);
         item.setLastUpdatedAt(LocalDateTime.now());
@@ -241,11 +244,11 @@ public class InventoryService {
     public InventoryItem deactivateItem(String itemCode, Long updatingUserId) {
         // Fetch item (404 if not found)
         InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
-                .orElseThrow(() -> new IllegalArgumentException("Item with code '" + itemCode + "' not found."));
+                .orElseThrow(() -> new IllegalArgumentException(ITEM_WITH_CODE  + itemCode + NOT_FOUND));
 
         // Fetch user performing the action (404 if not found)
         User updatingUser = userRepository.findById(updatingUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User with id '" + updatingUserId + "' not found."));
+                .orElseThrow(() -> new IllegalArgumentException(USER_WITH_ID + updatingUserId + NOT_FOUND));
 
         // Idempotent: only update if currently active
         if (Boolean.TRUE.equals(item.getIsActive())) {
