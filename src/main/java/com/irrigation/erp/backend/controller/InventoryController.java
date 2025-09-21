@@ -129,7 +129,7 @@ public class InventoryController {
         List<InventoryItem> items = inventoryService.getAllInventoryItems();
         List<InventoryItemResponseDTO> dtos = items.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -151,7 +151,7 @@ public class InventoryController {
             List<InventoryItem> items = inventoryService.getInventoryItemsByCategoryId(categoryId);
             List<InventoryItemResponseDTO> dtos = items.stream()
                     .map(this::convertToDto)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -183,7 +183,7 @@ public class InventoryController {
         List<InventoryItem> items = inventoryService.getLowStockItems();
         List<InventoryItemResponseDTO> dtos = items.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -195,9 +195,6 @@ public class InventoryController {
 
             InventoryItem itemToDeactivate = inventoryService.getInventoryItemByItemCode(itemCode)
                     .orElseThrow(() -> new IllegalArgumentException(INVENTORY_ITEM_WITH_CODE  + itemCode + ITEM_NOT_FOUND));
-
-            System.out.println("Deactivating item: " + itemToDeactivate);
-
 
 
             // Call the update service method to set isActive to false

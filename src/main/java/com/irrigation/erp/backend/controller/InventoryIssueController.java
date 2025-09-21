@@ -76,7 +76,7 @@ public class InventoryIssueController {
             List<InventoryIssue> issues = inventoryIssueService.getAllIssues();
             List<InventoryIssueResponseDTO> dtos = issues.stream()
                     .map(this::convertToDto)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching all issues: " + e.getMessage());
@@ -89,7 +89,7 @@ public class InventoryIssueController {
             List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemId(itemId);
             List<InventoryIssueResponseDTO> dtos = issues.stream()
                     .map(this::convertToDto)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -104,7 +104,7 @@ public class InventoryIssueController {
             List<InventoryIssue> issues = inventoryIssueService.getIssueHistoryByItemCode(itemCode);
             List<InventoryIssueResponseDTO> dtos = issues.stream()
                     .map(this::convertToDto)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -119,7 +119,7 @@ public class InventoryIssueController {
             List<InventoryIssue> issues = inventoryIssueService.getIssuesByRequestId(requestId);
             List<InventoryIssueResponseDTO> dtos = issues.stream()
                     .map(this::convertToDto)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -132,16 +132,16 @@ public class InventoryIssueController {
 public ResponseEntity<List<InventoryIssueResponseDTO>> getIssuesByUserId(@PathVariable Long userId) {
     List<InventoryIssue> issues = inventoryIssueService.getIssuesByUserId(userId);
 
-    // ensure it's never null
+
     if (issues == null) {
         issues = Collections.emptyList();
     }
 
     List<InventoryIssueResponseDTO> dtos = issues.stream()
             .map(this::convertToDto)
-            .collect(Collectors.toList());
+            .toList();
 
-    return ResponseEntity.ok(dtos); // [] if no records
+    return ResponseEntity.ok(dtos);
 }
 
 

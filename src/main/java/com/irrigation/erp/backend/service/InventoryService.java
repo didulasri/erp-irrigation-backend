@@ -146,7 +146,7 @@ public class InventoryService {
                 )
                 .stream()
                 .map(this::mapToDTO) // Map each entity to the DTO
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // Helper method to map entity to DTO
@@ -204,7 +204,7 @@ public class InventoryService {
     public List<InventoryItem> getLowStockItems() {
         return inventoryItemRepository.findAll().stream()
                 .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // NEW METHOD: Get low stock items by category
@@ -212,7 +212,7 @@ public class InventoryService {
         // Now calling the method that returns DTOs and filtering that result
         return getInventoryItemsByCategory(categoryName).stream()
                 .filter(item -> item.getStockStatus() == StockStatus.LOW || item.getStockStatus() == StockStatus.OUT_OF_STOCK)
-                .collect(Collectors.toList());
+                .toList();
     }
     @Transactional
     public InventoryItem adjustStock(Long itemId, @NotNull(message = "Quantity change cannot be null") BigDecimal quantityChange, Long adjustingUserId, String reason) {

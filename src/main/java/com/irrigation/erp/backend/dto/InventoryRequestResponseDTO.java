@@ -2,7 +2,6 @@ package com.irrigation.erp.backend.dto;
 
 
 import com.irrigation.erp.backend.enums.RequestStatus;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 

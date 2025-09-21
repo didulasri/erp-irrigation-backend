@@ -59,6 +59,6 @@ public class CategoryService {
                     itemCount,
                     lowStockCount
             );
-        }).collect(Collectors.toList());
+        }).toList();
     }
 }

@@ -7,8 +7,7 @@ import com.irrigation.erp.backend.repository.InventoryIssueRepository;
 import com.irrigation.erp.backend.repository.InventoryItemRepository;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,6 +16,7 @@ public class InventoryIssueService {
 
     private final InventoryIssueRepository inventoryIssueRepository;
     private final InventoryItemRepository inventoryItemRepository;
+    public static final String ITEM_NOT_FOUND = "' not found.";
 
     public InventoryIssueService(InventoryIssueRepository inventoryIssueRepository,
                                  InventoryItemRepository inventoryItemRepository) {
@@ -61,12 +61,12 @@ public class InventoryIssueService {
             }
 
             return inventoryIssueRepository.save(existing);
-        }).orElseThrow(() -> new IllegalArgumentException("Inventory Issue with ID " + id + " not found."));
+        }).orElseThrow(() -> new IllegalArgumentException("Inventory Issue with ID " + id + ITEM_NOT_FOUND));
     }
 
     public void deleteIssue(Long id) {
         if (!inventoryIssueRepository.existsById(id)) {
-            throw new IllegalArgumentException("Inventory Issue with ID " + id + " not found.");
+            throw new IllegalArgumentException("Inventory Issue with ID " + id + ITEM_NOT_FOUND);
         }
         inventoryIssueRepository.deleteById(id);
     }
@@ -74,13 +74,13 @@ public class InventoryIssueService {
     // Existing methods
     public List<InventoryIssue> getIssueHistoryByItemId(Long itemId) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + " not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + ITEM_NOT_FOUND));
         return inventoryIssueRepository.findByIssuedItemOrderByIssuedAtDesc(item);
     }
 
     public List<InventoryIssue> getIssueHistoryByItemCode(String itemCode) {
         InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
-                .orElseThrow(() -> new IllegalArgumentException("Inventory item with code '" + itemCode + "' not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item with code '" + itemCode + ITEM_NOT_FOUND));
         return inventoryIssueRepository.findByIssuedItemOrderByIssuedAtDesc(item);
     }
 
@@ -137,7 +137,7 @@ public class InventoryIssueService {
         // Convert back to list and sort by issued date (descending)
         return combinedIssues.stream()
                 .sorted((a, b) -> b.getIssuedAt().compareTo(a.getIssuedAt()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // NEW METHOD: Get other distributions for a specific user
