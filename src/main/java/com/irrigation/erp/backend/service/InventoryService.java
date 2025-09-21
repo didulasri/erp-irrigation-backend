@@ -28,6 +28,8 @@ public class InventoryService {
     private final ItemCategoryRepository itemCategoryRepository;
     private final ItemTypeRepository itemTypeRepository;
     private final UserRepository userRepository;
+    public static final String NOT_FOUND = "' not found.";
+    public static final String ITEM_CATEGORY = "Item Category '";
 
     public InventoryService(InventoryItemRepository inventoryItemRepository,
                             ItemCategoryRepository itemCategoryRepository,
@@ -40,7 +42,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryItem createInventoryItem(InventoryItemCreateRequestDTO requestDTO) { // Takes DTO directly
+    public InventoryItem createInventoryItem(InventoryItemCreateRequestDTO requestDTO) {
 
         //check for unique item code
         if(inventoryItemRepository.findByItemCode(requestDTO.getItemCode()).isPresent()){
@@ -49,13 +51,13 @@ public class InventoryService {
 
         //fetch entities from repositories
         ItemCategory itemCategory = itemCategoryRepository.findByName(requestDTO.getItemCategoryName())
-                .orElseThrow(()-> new IllegalArgumentException("Item Category '" + requestDTO.getItemCategoryName() + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException(ITEM_CATEGORY + requestDTO.getItemCategoryName() + NOT_FOUND));
 
         ItemType itemType = itemTypeRepository.findByName(requestDTO.getItemTypeName())
-                .orElseThrow(()-> new IllegalArgumentException("Item Type '" + requestDTO.getItemTypeName() + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException("Item Type '" + requestDTO.getItemTypeName() + NOT_FOUND));
 
         User creatingUser = userRepository.findById(requestDTO.getCreatingUserId())
-                .orElseThrow(()-> new IllegalArgumentException("User with id '" + requestDTO.getCreatingUserId() + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException("User with id '" + requestDTO.getCreatingUserId() + NOT_FOUND));
         // Changed from IllegalIdentifierException for consistency
 
         //Create and Populate New InventoryItem Object
@@ -92,7 +94,7 @@ public class InventoryService {
                                              Long updatingUserId){
 
         InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
-                .orElseThrow(()-> new IllegalArgumentException("Item with code '" + itemCode + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException("Item with code '" + itemCode + NOT_FOUND));
 
         if (itemName != null) item.setItemName(itemName);
         if (itemDescription != null) item.setItemDescription(itemDescription);
@@ -101,14 +103,14 @@ public class InventoryService {
         if (locationInStore != null) item.setLocationInStore(locationInStore);
         if (unitPrice != null) item.setUnitPrice(unitPrice);
 
-        if (itemCategoryName != null && item.getItemCategory() != null && !item.getItemCategory().getName().equals(itemCategoryName)) { // Added null check for getItemCategory()
+        if (itemCategoryName != null && item.getItemCategory() != null && !item.getItemCategory().getName().equals(itemCategoryName)) {
             ItemCategory newCategory = itemCategoryRepository.findByName(itemCategoryName)
-                    .orElseThrow(() -> new IllegalArgumentException("Item Category '" + itemCategoryName + "' not found."));
+                    .orElseThrow(() -> new IllegalArgumentException(ITEM_CATEGORY + itemCategoryName + NOT_FOUND));
             item.setItemCategory(newCategory);
         }
-        if (itemTypeName != null && item.getItemType() != null && !item.getItemType().getName().equals(itemTypeName)) { // Added null check for getItemType()
+        if (itemTypeName != null && item.getItemType() != null && !item.getItemType().getName().equals(itemTypeName)) {
             ItemType newType = itemTypeRepository.findByName(itemTypeName)
-                    .orElseThrow(() -> new IllegalArgumentException("Item Type '" + itemTypeName + "' not found."));
+                    .orElseThrow(() -> new IllegalArgumentException("Item Type '" + itemTypeName + NOT_FOUND));
             item.setItemType(newType);
         }
 
@@ -116,7 +118,7 @@ public class InventoryService {
 
         //update updatingUser fields
         User updatingUser = userRepository.findById(updatingUserId)
-                .orElseThrow(()-> new IllegalArgumentException("User with id '" + updatingUserId + "' not found."));
+                .orElseThrow(()-> new IllegalArgumentException("User with id '" + updatingUserId + NOT_FOUND));
         // Changed from IllegalIdentifierException for consistency
         item.setLastUpdatedByUser(updatingUser);
         item.setLastUpdatedAt(LocalDateTime.now());
@@ -140,7 +142,7 @@ public class InventoryService {
     public List<InventoryItemResponseDTO> getInventoryItemsByCategory(String categoryName) {
         return inventoryItemRepository.findByItemCategory(
                         itemCategoryRepository.findByName(categoryName)
-                                .orElseThrow(() -> new IllegalArgumentException("Item Category '" + categoryName + "' not found."))
+                                .orElseThrow(() -> new IllegalArgumentException(ITEM_CATEGORY + categoryName + NOT_FOUND))
                 )
                 .stream()
                 .map(this::mapToDTO) // Map each entity to the DTO
@@ -190,7 +192,7 @@ public class InventoryService {
     // NEW METHOD: Get inventory items by category ID
     public List<InventoryItem> getInventoryItemsByCategoryId(Long categoryId) {
         ItemCategory category = itemCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Item Category with ID '" + categoryId + "' not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Item Category with ID '" + categoryId + NOT_FOUND));
         return inventoryItemRepository.findByItemCategory(category);
     }
 
@@ -215,7 +217,7 @@ public class InventoryService {
     @Transactional
     public InventoryItem adjustStock(Long itemId, @NotNull(message = "Quantity change cannot be null") BigDecimal quantityChange, Long adjustingUserId, String reason) {
         InventoryItem item = inventoryItemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + " not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Inventory item with ID " + itemId + NOT_FOUND));
 
         BigDecimal newQuantity = item.getCurrentStockQuantity().add(quantityChange);
 
@@ -227,7 +229,7 @@ public class InventoryService {
         item.setCurrentStockQuantity(newQuantity);
 
         User adjustingUser = userRepository.findById(adjustingUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Adjusting User with ID " + adjustingUserId + " not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Adjusting User with ID " + adjustingUserId + NOT_FOUND));
         item.setLastUpdatedByUser(adjustingUser);
         item.setLastUpdatedAt(LocalDateTime.now());
 
