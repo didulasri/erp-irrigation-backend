@@ -189,18 +189,10 @@ public class InventoryController {
 
 
     @DeleteMapping("/{itemCode}")
-    public ResponseEntity<Void> deactivateInventoryItem(@PathVariable String itemCode, @RequestParam Long updatingUserId) {
+    public ResponseEntity<Void> deactivateInventoryItem(@PathVariable String itemCode,
+                                                        @RequestParam Long updatingUserId) {
         try {
-            // Find the item by code
-
-            InventoryItem itemToDeactivate = inventoryService.getInventoryItemByItemCode(itemCode)
-                    .orElseThrow(() -> new IllegalArgumentException(INVENTORY_ITEM_WITH_CODE  + itemCode + ITEM_NOT_FOUND));
-
-
-            // Call the update service method to set isActive to false
-            inventoryService.updateInventoryItem(
-                    itemCode, null, null, null, null, null, null, null, null, false, updatingUserId);
-
+            inventoryService.deactivateItem(itemCode, updatingUserId);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
