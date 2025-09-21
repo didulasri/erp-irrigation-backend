@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/erp_ci   # host is the service name from the workflow
+    username: erp
+    password: erp
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update          # or create-drop if you prefer a clean schema in CI
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+    show-sql: false
+
+  # If migrations or external infra cause issues in CI, adjust here
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
+
+  # Turn off integrations you don't bring up in CI
+  kafka:
+    enabled: false
+  rabbitmq:
+    enabled: false
+  minio:
+    enabled: false
