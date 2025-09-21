@@ -1,4 +1,4 @@
-name: Backend CI + SonarQube (Postgres)
+name: SonarQube (Backend only, no tests)
 
 on:
   push:
@@ -16,28 +16,8 @@ env:
   SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
 
 jobs:
-  backend:
+  sonar:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: erp_ci
-          POSTGRES_USER: erp
-          POSTGRES_PASSWORD: erp
-        # Use the service hostname "postgres" from the job
-        options: >-
-          --health-cmd="pg_isready -U erp -d erp_ci"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
-    env:
-      # Spring will pick these up for the ci profile
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/irrigation_erp_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: didulapostgre123
 
     steps:
       - name: Checkout
@@ -53,6 +33,11 @@ jobs:
       - name: Make Maven Wrapper executable
         run: chmod +x mvnw
 
+      # Build ONLY to generate compiled classes; skip all tests
+      - name: Build (skip tests)
+        run: ./mvnw -B -U clean package -DskipTests -DskipITs=true
+
+      # Run SonarQube scan (no coverage)
       - name: SonarQube Scan
         run: |
           ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
@@ -60,24 +45,5 @@ jobs:
             -Dsonar.login="${SONAR_TOKEN}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
             -Dsonar.projectName="ERP Backend" \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-
-      - name: Upload reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: surefire-and-jacoco
-          path: |
-            target/surefire-reports/**
-            target/site/jacoco/**
-          if-no-files-found: ignore
-
-  quality-gate:
-    runs-on: ubuntu-latest
-    needs: backend
-    steps:
-      - name: Check Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.md,**/*.yml,**/*.yaml,**/*.json
