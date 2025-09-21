@@ -1,0 +1,71 @@
+
+name: Backend CI + SonarQube
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  SONAR_TOKEN:    ${{ secrets.SONAR_TOKEN }}
+  # Create this secret with your project key, e.g. erp-irrigation-backend
+#  SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Make Maven Wrapper executable (Linux)
+        run: chmod +x mvnw
+
+      - name: Test + Coverage
+        run: ./mvnw -B -U clean verify -DskipITs=true
+        # Ensure JaCoCo is configured to output XML at:
+        # target/site/jacoco/jacoco.xml
+
+      - name: SonarQube Scan
+        run: |
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.host.url="${SONAR_HOST_URL}" \
+            -Dsonar.login="${SONAR_TOKEN}" \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
+            -Dsonar.projectName="ERP Irrigation Backend" \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+      - name: Upload test reports (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: |
+            target/surefire-reports/**
+            target/site/jacoco/**
+          if-no-files-found: ignore
+
+  quality-gate:
+    name: SonarQube Quality Gate
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - name: Check Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
